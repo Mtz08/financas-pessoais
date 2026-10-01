@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static financas %}
+{% block titulo %}Dashboard{% endblock %}
+{% block cabecalho %}
+<script src="{% static 'vendor/chart.umd.min.js' %}" defer></script>
+<script src="{% static 'js/dashboard.js' %}" defer></script>
+{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <h1>Visão geral</h1>
+  <nav class="navegacao-mes" aria-label="Mês">
+    <a href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">‹</a>
+    <strong>{{ mes|date:"F \d\e Y"|capfirst }}</strong>
+    <a href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Mês seguinte">›</a>
+  </nav>
+</div>
+
+<div class="tiles">
+  <article class="tile">
+    <small>Saldo disponível hoje</small>
+    <strong class="{{ saldo_disponivel|sinal }}">{{ saldo_disponivel|reais }}</strong>
+    <small class="muted">conta corrente + dinheiro</small>
+  </article>
+  <article class="tile">
+    <small>Receitas do mês</small>
+    <strong>{{ resumo.receitas|reais }}</strong>
+    {% if resumo.receitas_pendentes %}<small class="muted">{{ resumo.receitas_pendentes|reais }} a receber</small>{% endif %}
+  </article>
+  <article class="tile">
+    <small>Despesas do mês</small>
+    <strong>{{ resumo.despesas|reais }}</strong>
+    {% if resumo.despesas_pendentes %}<small class="muted">{{ resumo.despesas_pendentes|reais }} pendentes</small>{% endif %}
+  </article>
+  <article class="tile">
+    <small>Resultado do mês</small>
+    <strong class="{{ resumo.resultado|sinal }}">{{ resumo.resultado|reais }}</strong>
+    <small class="muted">receitas − despesas</small>
+  </article>
+</div>
+
+<div class="acoes-rapidas">
+  <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">+ Despesa</a>
+  <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="secondary">+ Receita</a>
+  <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">Transferência</a>
+  <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">Parcelado</a>
+</div>
+
+{% if alertas %}
+<section>
+  <h2>Alertas de orçamento</h2>
+  {% include "orcamentos/_situacoes.html" with situacoes=alertas %}
+</section>
+{% endif %}
+
+<div class="grade-2">
+  <article class="grafico">
+    <header><h2>Gastos por categoria</h2></header>
+    {% if gastos %}
+      <div class="grafico-area" data-altura="{{ gastos|length }}"><canvas id="grafico-categorias" role="img"
+        aria-label="Barras com o total gasto por categoria no mês"></canvas></div>
+      <details><summary>Ver tabela</summary>
+        <table><tbody>{% for g in gastos %}<tr><td>{{ g.grupo }}</td><td class="num">{{ g.total|reais }}</td></tr>{% endfor %}</tbody></table>
+      </details>
+    {% else %}
+      <p class="muted">Nenhuma despesa neste mês.</p>
+    {% endif %}
+  </article>
+
+  <article class="grafico">
+    <header><h2>Receitas x despesas — 12 meses</h2></header>
+    <div class="grafico-area"><canvas id="grafico-evolucao" role="img"
+      aria-label="Barras agrupadas de receitas e despesas nos últimos 12 meses"></canvas></div>
+    <details><summary>Ver tabela</summary>
+      <table>
+        <thead><tr><th>Mês</th><th class="num">Receitas</th><th class="num">Despesas</th></tr></thead>
+        <tbody>{% for e in evolucao %}<tr><td>{{ e.mes|date:"m/Y" }}</td><td class="num">{{ e.receitas|reais }}</td><td class="num">{{ e.despesas|reais }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </details>
+  </article>
+</div>
+
+<div class="grade-2">
+  <article>
+    <header><h2>Contas a vencer (30 dias)</h2></header>
+    <table>
+      <tbody>
+      {% for r in a_vencer.faturas %}
+        <tr class="{% if r.fatura.data_vencimento < hoje %}atrasado{% endif %}">
+          <td>{{ r.fatura.data_vencimento|date:"d/m" }}{% if r.fatura.data_vencimento < hoje %} <small class="situacao situacao-vencida">atrasada</small>{% endif %}</td>
+          <td><a href="{% url 'cartoes:fatura' r.fatura.pk %}">Fatura {{ r.fatura.conta }} {{ r.fatura.competencia|date:"m/Y" }}</a></td>
+          <td class="num">{{ r.restante_centavos|reais }}</td>
+        </tr>
+      {% endfor %}
+      {% for l in a_vencer.lancamentos %}
+        <tr class="{% if l.data < hoje %}atrasado{% endif %}">
+          <td>{{ l.data|date:"d/m" }}{% if l.data < hoje %} <small class="situacao situacao-vencida">atrasada</small>{% endif %}</td>
+          <td><a href="{% url 'lancamentos:editar' l.pk %}">{{ l.descricao_completa }}</a></td>
+          <td class="num">{{ l.valor_centavos|reais }}</td>
+        </tr>
+      {% endfor %}
+      {% if not a_vencer.faturas and not a_vencer.lancamentos %}
+        <tr><td class="muted">Nada a vencer nos próximos 30 dias.</td></tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </article>
+
+  <article>
+    <header><h2>Saldos por conta</h2></header>
+    <table>
+      <tbody>
+      {% for conta, saldo in saldos %}
+        <tr>
+          <td>{% if conta.eh_cartao %}<a href="{% url 'cartoes:faturas' conta.pk %}">{{ conta }}</a> <small class="muted">(cartão)</small>{% else %}{{ conta }}{% endif %}</td>
+          <td class="num {{ saldo|sinal }}">{{ saldo|reais }}</td>
+        </tr>
+      {% empty %}
+        <tr><td><a href="{% url 'contas:nova' %}">Cadastre sua primeira conta</a></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </article>
+</div>
+
+{{ grafico_categorias|json_script:"dados-categorias" }}
+{{ grafico_evolucao|json_script:"dados-evolucao" }}
+{% endblock %}
