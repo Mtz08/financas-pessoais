@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Excluir lançamento{% endblock %}
+{% block conteudo %}
+<article>
+  <h1>Excluir lançamento?</h1>
+  <p><strong>{{ lancamento.descricao_completa }}</strong> — {{ lancamento.data|date:"d/m/Y" }} — {{ lancamento.valor_centavos|reais }}</p>
+  {% if lancamento.eh_transferencia %}
+    <p class="nota">A transferência inteira (saída e entrada) será excluída.</p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    {% if com_escopo %}
+      <fieldset>
+        <legend>O que excluir?</legend>
+        {% for opcao in form.escopo %}<label>{{ opcao.tag }} {{ opcao.choice_label }}</label>{% endfor %}
+      </fieldset>
+      {% if lancamento.recorrencia_id %}<p class="nota">Ocorrências já pagas são mantidas como histórico.</p>{% endif %}
+    {% endif %}
+    <div class="acoes">
+      <button type="submit" class="perigo-botao">Excluir</button>
+      <a href="{% url 'lancamentos:lista' %}" role="button" class="secondary outline" data-voltar>Cancelar</a>
+    </div>
+  </form>
+</article>
+{% endblock %}

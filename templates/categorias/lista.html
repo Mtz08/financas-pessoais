@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Categorias{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <h1>Categorias</h1>
+  <a href="{% url 'categorias:nova' %}" role="button">Nova categoria</a>
+</div>
+{% regroup raizes by get_tipo_display as grupos %}
+<div class="grade-2">
+{% for grupo in grupos %}
+  <section>
+    <h2>{{ grupo.grouper }}s</h2>
+    <ul class="arvore">
+    {% for raiz in grupo.list %}
+      <li class="{% if not raiz.ativo %}arquivado{% endif %}">
+        <strong>{{ raiz.nome }}</strong>{% if not raiz.ativo %} <small>(arquivada)</small>{% endif %}
+        {% include "categorias/_acoes.html" with categoria=raiz %}
+        <a href="{% url 'categorias:nova' %}?pai={{ raiz.pk }}&tipo={{ raiz.tipo }}" class="pequeno">+ subcategoria</a>
+        <ul>
+        {% for sub in raiz.subcategorias.all %}
+          <li class="{% if not sub.ativo %}arquivado{% endif %}">
+            {{ sub.nome }}{% if not sub.ativo %} <small>(arquivada)</small>{% endif %}
+            {% include "categorias/_acoes.html" with categoria=sub %}
+          </li>
+        {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+    </ul>
+  </section>
+{% empty %}
+  <p>Nenhuma categoria cadastrada.</p>
+{% endfor %}
+</div>
+{% endblock %}

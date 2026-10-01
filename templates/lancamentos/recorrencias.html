@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Recorrências{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <h1>Recorrências</h1>
+  <a href="{% url 'lancamentos:recorrencia_nova' %}" role="button">Nova recorrência</a>
+</div>
+<p class="nota">Os lançamentos fixos são gerados automaticamente até 2 meses à frente. Para alterar valores,
+edite um lançamento gerado e escolha “Esta e as próximas” ou “Todas”.</p>
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Descrição</th><th>Tipo</th><th>Categoria</th><th>Conta</th><th>Dia</th><th class="num">Valor</th><th>Vigência</th><th></th></tr></thead>
+  <tbody>
+  {% for r in recorrencias %}
+    <tr class="{% if r.data_fim and r.data_fim < hoje %}arquivado{% endif %}">
+      <td>{{ r.descricao }}</td>
+      <td>{{ r.get_tipo_display }}</td>
+      <td>{{ r.categoria }}</td>
+      <td>{{ r.conta }}</td>
+      <td>{{ r.dia }}</td>
+      <td class="num">{{ r.valor_centavos|reais }}</td>
+      <td>{{ r.data_inicio|date:"m/Y" }} → {{ r.data_fim|date:"d/m/Y"|default:"sem fim" }}</td>
+      <td>
+        {% if not r.data_fim or r.data_fim >= hoje %}
+        <form method="post" action="{% url 'lancamentos:recorrencia_encerrar' r.pk %}" class="inline"
+              data-confirmar="Encerrar “{{ r.descricao }}” hoje? Os lançamentos futuros pendentes serão removidos.">
+          {% csrf_token %}<button class="link perigo">Encerrar</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="8">Nenhuma recorrência cadastrada.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

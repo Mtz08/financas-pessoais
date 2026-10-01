@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Backup{% endblock %}
+{% block conteudo %}
+<h1>Backup</h1>
+<div class="grade-2">
+  <article>
+    <h2>Exportar</h2>
+    <p>Baixa um arquivo JSON com todas as contas, categorias, faturas, lançamentos, recorrências,
+    parcelamentos e orçamentos.</p>
+    <a href="{% url 'backup:baixar' %}" role="button">Baixar backup</a>
+  </article>
+  <article>
+    <h2>Importar</h2>
+    <p class="nota"><strong>Atenção:</strong> a importação substitui todos os dados atuais. Se o arquivo tiver
+    qualquer erro, nada é alterado.</p>
+    {% url 'backup:restaurar' as acao %}
+    {% include "_form.html" with acao=acao botao="Importar backup" %}
+  </article>
+</div>
+{% endblock %}

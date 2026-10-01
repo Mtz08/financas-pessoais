@@ -1,0 +1,34 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block titulo %}Finanças{% endblock %} · Finanças</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'vendor/pico.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+  {% block cabecalho %}{% endblock %}
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <header class="container">
+    <nav class="menu">
+      <ul><li><a href="{% url 'dashboard' %}" class="marca"><strong>Finanças</strong></a></li></ul>
+      <ul class="menu-desktop">{% include "_menu.html" %}</ul>
+      <details class="menu-movel">
+        <summary>Menu</summary>
+        <ul>{% include "_menu.html" %}</ul>
+      </details>
+    </nav>
+  </header>
+  {% endif %}
+  <main class="container">
+    {% for mensagem in messages %}
+      <article class="aviso aviso-{{ mensagem.tags }}" role="status">{{ mensagem }}</article>
+    {% endfor %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>

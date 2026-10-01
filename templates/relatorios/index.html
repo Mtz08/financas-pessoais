@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Relatórios{% endblock %}
+{% block conteudo %}
+<h1>Relatórios</h1>
+<form method="get" class="grade-filtros">
+  {% for campo in form %}
+    <label>{{ campo.label }} {{ campo }}{% for erro in campo.errors %}<small class="erro">{{ erro }}</small>{% endfor %}</label>
+  {% endfor %}
+  <button type="submit">Filtrar</button>
+</form>
+
+{% if totais %}
+<div class="resumo-linha">
+  <span>Receitas <strong class="positivo">{{ totais.receitas|reais }}</strong></span>
+  <span>Despesas <strong class="negativo">{{ totais.despesas|reais }}</strong></span>
+  <span>Resultado <strong class="{{ totais.resultado|sinal }}">{{ totais.resultado|reais }}</strong></span>
+  <a href="?{{ query_csv }}&formato=csv" role="button" class="secondary outline">Exportar CSV</a>
+</div>
+
+<h2>Por categoria</h2>
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Tipo</th><th>Categoria</th><th class="num">Total</th></tr></thead>
+  <tbody>
+  {% for linha in por_categoria %}
+    <tr>
+      <td>{% if linha.tipo == "RECEITA" %}Receita{% elif linha.tipo == "DESPESA" %}Despesa{% else %}Transferência{% endif %}</td>
+      <td>{% if linha.categoria__pai__nome %}{{ linha.categoria__pai__nome }} › {% endif %}{{ linha.categoria__nome|default:"—" }}</td>
+      <td class="num">{{ linha.total|reais }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2>Lançamentos</h2>
+{% if truncado %}<p class="nota">Mostrando os primeiros 1.000. O CSV traz todos.</p>{% endif %}
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Data</th><th>Descrição</th><th class="col-opcional">Categoria</th><th class="col-opcional">Conta</th><th class="num">Valor</th><th class="col-opcional">Status</th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}
+    <tr>
+      <td>{{ l.data|date:"d/m/y" }}</td><td>{{ l.descricao_completa }}</td><td class="col-opcional">{{ l.categoria|default:"—" }}</td>
+      <td class="col-opcional">{{ l.conta }}</td><td class="num {{ l.valor_com_sinal|sinal }}">{{ l.valor_com_sinal|reais }}</td>
+      <td class="col-opcional">{{ l.get_status_display }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">Nenhum lançamento no período.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

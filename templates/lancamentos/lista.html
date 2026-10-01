@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Lançamentos{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <h1>Lançamentos</h1>
+  <div class="botoes">
+    <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">+ Despesa</a>
+    <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="secondary">+ Receita</a>
+    <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">Transferência</a>
+    <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">Parcelado</a>
+  </div>
+</div>
+
+<nav class="navegacao-mes" aria-label="Mês">
+  <a href="?mes={{ mes_anterior|date:'Y-m' }}&{{ parametros }}" aria-label="Mês anterior">‹</a>
+  <strong>{{ mes|date:"F \d\e Y"|capfirst }}</strong>
+  <a href="?mes={{ mes_seguinte|date:'Y-m' }}&{{ parametros }}" aria-label="Mês seguinte">›</a>
+</nav>
+
+<details class="filtros">
+  <summary>Filtros</summary>
+  <form method="get" class="grade-filtros">
+    <input type="hidden" name="mes" value="{{ mes|date:'Y-m' }}">
+    {{ filtro.conta }} {{ filtro.categoria }} {{ filtro.tipo }} {{ filtro.status }}
+    <button type="submit" class="secondary">Filtrar</button>
+  </form>
+</details>
+
+<div class="resumo-linha">
+  <span>Receitas <strong class="positivo">{{ totais.receitas|reais }}</strong></span>
+  <span>Despesas <strong class="negativo">{{ totais.despesas|reais }}</strong></span>
+  <span>Resultado <strong class="{{ totais.resultado|sinal }}">{{ totais.resultado|reais }}</strong></span>
+</div>
+
+<div class="tabela-rolavel">
+<table class="lancamentos">
+  <thead><tr><th>Data</th><th>Descrição</th><th class="col-opcional">Categoria</th><th class="col-opcional">Conta</th><th class="num">Valor</th><th>Status</th><th class="col-opcional"></th></tr></thead>
+  <tbody>
+  {% for l in pagina %}
+    <tr>
+      <td>{{ l.data|date:"d/m" }}</td>
+      <td>
+        <a href="{% url 'lancamentos:editar' l.pk %}" class="link-discreto">{{ l.descricao_completa }}</a>
+        {% if l.recorrencia_id %}<small class="etiqueta" title="Recorrente">fixo</small>{% endif %}
+        {% if l.eh_transferencia %}<small class="etiqueta">{{ l.get_tipo_display }}</small>{% endif %}
+      </td>
+      <td class="col-opcional">{{ l.categoria|default:"—" }}</td>
+      <td class="col-opcional">{{ l.conta }}</td>
+      <td class="num {{ l.valor_com_sinal|sinal }}">{{ l.valor_com_sinal|reais }}</td>
+      <td>
+        <form method="post" action="{% url 'lancamentos:alternar_status' l.pk %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="voltar" value="{{ request.get_full_path }}">
+          <button class="link status-{{ l.status|lower }}" title="Clique para alternar">{{ l.get_status_display }}</button>
+        </form>
+      </td>
+      <td class="acoes-linha col-opcional">
+        <a href="{% url 'lancamentos:editar' l.pk %}">Editar</a>
+        <a href="{% url 'lancamentos:excluir' l.pk %}" class="perigo">Excluir</a>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7">Nenhum lançamento neste mês.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pagina.has_other_pages %}
+<nav class="paginacao">
+  {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}&mes={{ mes|date:'Y-m' }}&{{ parametros }}">‹ Anterior</a>{% endif %}
+  <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}&mes={{ mes|date:'Y-m' }}&{{ parametros }}">Próxima ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

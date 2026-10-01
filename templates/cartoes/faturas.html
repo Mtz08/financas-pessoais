@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Faturas{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <h1>Faturas{% if cartao %} — {{ cartao }}{% endif %}</h1>
+  {% if cartoes|length > 1 %}
+  <nav class="botoes">{% for c in cartoes %}<a href="{% url 'cartoes:faturas' c.pk %}" {% if c == cartao %}aria-current="page"{% endif %}>{{ c }}</a>{% endfor %}</nav>
+  {% endif %}
+</div>
+{% if not cartao %}
+  <p>Nenhum cartão de crédito cadastrado. <a href="{% url 'contas:nova' %}">Cadastrar conta do tipo cartão</a>.</p>
+{% else %}
+<p class="nota">Fecha dia {{ cartao.dia_fechamento }} e vence dia {{ cartao.dia_vencimento }}.
+Compras feitas no dia do fechamento ou depois entram na fatura seguinte.</p>
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Fatura</th><th class="col-opcional">Fechamento</th><th>Vencimento</th><th class="num">Total</th><th class="num col-opcional">Pago</th><th>Situação</th></tr></thead>
+  <tbody>
+  {% for r in resumos %}
+    <tr>
+      <td><a href="{% url 'cartoes:fatura' r.fatura.pk %}">{{ r.fatura.competencia|date:"m/Y" }}</a></td>
+      <td class="col-opcional">{{ r.fatura.data_fechamento|date:"d/m/Y" }}</td>
+      <td>{{ r.fatura.data_vencimento|date:"d/m/Y" }}</td>
+      <td class="num">{{ r.total_centavos|reais }}</td>
+      <td class="num col-opcional">{{ r.pago_centavos|reais }}</td>
+      <td><span class="situacao situacao-{{ r.status|lower }}">{{ r.status|capfirst }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

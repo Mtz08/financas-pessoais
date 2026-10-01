@@ -1,0 +1,5 @@
+<span class="acoes-linha">
+  <a href="{% url 'categorias:editar' categoria.pk %}">Editar</a>
+  <form method="post" action="{% url 'categorias:arquivar' categoria.pk %}" class="inline">{% csrf_token %}<button class="link">{% if categoria.ativo %}Arquivar{% else %}Reativar{% endif %}</button></form>
+  <form method="post" action="{% url 'categorias:excluir' categoria.pk %}" class="inline" data-confirmar="Excluir a categoria “{{ categoria.nome }}”?">{% csrf_token %}<button class="link perigo">Excluir</button></form>
+</span>

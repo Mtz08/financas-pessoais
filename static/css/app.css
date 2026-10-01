@@ -1,0 +1,137 @@
+/* Tokens: cores dos gráficos e de estado (claro/escuro). */
+:root {
+  --serie-1: #2a78d6;          /* receitas / série única */
+  --serie-2: #eb6834;          /* despesas */
+  --texto-secundario: #52514e;
+  --texto-mudo: #898781;
+  --grade: #e1e0d9;
+  --positivo: #006300;
+  --negativo: #b42828;
+  --estado-bom: #0ca30c;
+  --estado-alerta: #fab219;
+  --estado-critico: #d03b3b;
+  --estado-alerta-texto: #9a6700;
+  --largura-conteudo: 1200px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --texto-secundario: #c3c2b7;
+    --texto-mudo: #898781;
+    --grade: #2c2c2a;
+    --positivo: #0ca30c;
+    --negativo: #e66767;
+    --estado-alerta-texto: #fab219;
+  }
+}
+:root[data-theme="dark"] {
+  --estado-alerta-texto: #fab219;
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --texto-secundario: #c3c2b7;
+  --grade: #2c2c2a;
+  --positivo: #0ca30c;
+  --negativo: #e66767;
+}
+
+body { background: var(--pico-background-color); }
+.container { max-width: var(--largura-conteudo); }
+h1 { font-size: 1.6rem; margin-bottom: 1rem; }
+h2 { font-size: 1.15rem; }
+
+/* Menu: lista em linha no desktop; no celular, recolhível em "Menu".
+   (Um <details> fechado esconde o conteúdo, por isso são duas listas.) */
+.menu { flex-wrap: wrap; }
+.menu-desktop { flex-wrap: wrap; }
+.menu-movel { display: none; margin: 0; }
+.menu-movel > summary { list-style: none; cursor: pointer; padding: .5rem 0; }
+.menu-movel > ul { display: flex; flex-direction: column; margin: 0; }
+@media (max-width: 960px) {
+  .menu-desktop { display: none !important; }
+  .menu-movel { display: block; }
+}
+form.inline { display: inline; margin: 0; }
+button.link {
+  background: none; border: none; padding: 0; margin: 0; width: auto;
+  color: var(--pico-primary); text-decoration: underline; cursor: pointer; font-size: inherit;
+}
+button.pequeno, .pequeno { font-size: .85rem; padding: .25rem .6rem; width: auto; margin: 0; }
+.perigo, button.link.perigo { color: var(--negativo); }
+.perigo-botao { background: var(--estado-critico); border-color: var(--estado-critico); }
+
+.titulo-acoes { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.titulo-acoes h1 { margin: 0; }
+.botoes, .acoes-rapidas, .acoes { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.botoes a[role=button], .acoes-rapidas a[role=button],
+.acoes button, .acoes [role=button] { width: auto; margin: 0; }
+.acoes-linha { white-space: nowrap; display: inline-flex; gap: .75rem; margin-left: .5rem; font-size: .9rem; }
+
+.grade-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 1rem; }
+.campo-largo { grid-column: 1 / -1; }
+.grade-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .5rem; align-items: end; }
+.grade-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+@media (max-width: 400px) { .grade-2 { grid-template-columns: 1fr; } }
+
+.tabela-rolavel { overflow-x: auto; }
+td.num, th.num, .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.positivo { color: var(--positivo); }
+.negativo { color: var(--negativo); }
+.muted, .nota { color: var(--texto-secundario); }
+.nota { font-size: .9rem; }
+.erro { color: var(--estado-critico); display: block; }
+.arquivado { opacity: .55; }
+.etiqueta { border: 1px solid var(--grade); border-radius: 4px; padding: 0 .3rem; margin-left: .3rem; color: var(--texto-secundario); }
+
+.navegacao-mes { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.navegacao-mes a { text-decoration: none; font-size: 1.4rem; padding: 0 .5rem; }
+.paginacao { display: flex; justify-content: center; gap: 1rem; }
+.resumo-linha { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; margin: .5rem 0 1rem; }
+.resumo-linha a[role=button] { width: auto; margin: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.tile { margin: 0; display: flex; flex-direction: column; gap: .15rem; }
+.tile strong { font-size: 1.5rem; }
+
+/* Estados: sempre cor + texto (nunca só cor). */
+.situacao { border-radius: 4px; padding: .05rem .4rem; font-size: .8rem; border: 1px solid currentColor; }
+.situacao-paga { color: var(--positivo); }
+.situacao-vencida { color: var(--estado-critico); }
+.situacao-fechada { color: var(--estado-alerta-texto); }
+.situacao-aberta { color: var(--texto-secundario); }
+.status-pago { color: var(--positivo); }
+.status-pendente { color: var(--texto-secundario); }
+.atrasado td { font-weight: 600; }
+
+.orcamento { margin-bottom: .75rem; }
+.orcamento-cabecalho { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
+.orcamento progress { margin: .25rem 0 0; }
+.orcamento-ok progress { accent-color: var(--estado-bom); }
+.orcamento-alerta progress { accent-color: var(--estado-alerta); }
+.orcamento-estourado progress { accent-color: var(--estado-critico); }
+.orcamento-ok progress::-webkit-progress-value { background: var(--estado-bom); }
+.orcamento-alerta progress::-webkit-progress-value { background: var(--estado-alerta); }
+.orcamento-estourado progress::-webkit-progress-value { background: var(--estado-critico); }
+.orcamento-ok progress::-moz-progress-bar { background: var(--estado-bom); }
+.orcamento-alerta progress::-moz-progress-bar { background: var(--estado-alerta); }
+.orcamento-estourado progress::-moz-progress-bar { background: var(--estado-critico); }
+
+.aviso { padding: .75rem 1rem; margin-bottom: 1rem; border-left: 4px solid var(--pico-primary); }
+.aviso-success { border-left-color: var(--estado-bom); }
+.aviso-error { border-left-color: var(--estado-critico); }
+.aviso-warning, .aviso-info { border-left-color: var(--estado-alerta); }
+
+.grafico-area { position: relative; height: 280px; }
+.arvore ul { margin-left: 1rem; }
+.arvore li { margin-bottom: .25rem; }
+.login { max-width: 380px; margin: 4rem auto; }
+[data-so-cartao][hidden] { display: none; }
+
+/* Celular: esconde colunas secundárias das tabelas largas. */
+@media (max-width: 600px) {
+  .col-opcional { display: none; }
+  table { font-size: .875rem; }
+  th, td { padding: .5rem .3rem !important; }
+}
+.link-discreto { color: inherit; text-decoration: none; }
+.link-discreto:hover { text-decoration: underline; }

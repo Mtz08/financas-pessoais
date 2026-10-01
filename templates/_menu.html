@@ -1,0 +1,13 @@
+<li><a href="{% url 'lancamentos:lista' %}">Lançamentos</a></li>
+<li><a href="{% url 'cartoes:index' %}">Cartões</a></li>
+<li><a href="{% url 'lancamentos:recorrencias' %}">Recorrências</a></li>
+<li><a href="{% url 'orcamentos:lista' %}">Orçamentos</a></li>
+<li><a href="{% url 'relatorios:index' %}">Relatórios</a></li>
+<li><a href="{% url 'contas:lista' %}">Contas</a></li>
+<li><a href="{% url 'categorias:lista' %}">Categorias</a></li>
+<li><a href="{% url 'backup:index' %}">Backup</a></li>
+<li>
+  <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
+    <button type="submit" class="secondary outline pequeno">Sair</button>
+  </form>
+</li>

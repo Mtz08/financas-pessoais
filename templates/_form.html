@@ -1,0 +1,31 @@
+<form method="post" {% if form.is_multipart %}enctype="multipart/form-data"{% endif %} {% if acao %}action="{{ acao }}"{% endif %}>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <article class="aviso aviso-error" role="alert">{% for erro in form.non_field_errors %}{{ erro }} {% endfor %}</article>
+  {% endif %}
+  {% for campo in form.hidden_fields %}{{ campo }}{% endfor %}
+  <div class="grade-form">
+  {% for campo in form.visible_fields %}
+    <div class="campo{% if campo.field.widget.input_type == 'radio' %} campo-largo{% endif %}"
+         {% if 'data-so-cartao' in campo.field.widget.attrs %}data-so-cartao{% endif %}>
+      {% if campo.field.widget.input_type == 'radio' %}
+        <fieldset>
+          <legend>{{ campo.label }}</legend>
+          {% for opcao in campo %}<label>{{ opcao.tag }} {{ opcao.choice_label }}</label>{% endfor %}
+        </fieldset>
+      {% elif campo.field.widget.input_type == 'checkbox' %}
+        <label>{{ campo }} {{ campo.label }}</label>
+      {% else %}
+        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+        {{ campo }}
+      {% endif %}
+      {% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}
+      {% for erro in campo.errors %}<small class="erro">{{ erro }}</small>{% endfor %}
+    </div>
+  {% endfor %}
+  </div>
+  <div class="acoes">
+    <button type="submit">{{ botao|default:"Salvar" }}</button>
+    <a href="{% url 'dashboard' %}" role="button" class="secondary outline" data-voltar>Cancelar</a>
+  </div>
+</form>

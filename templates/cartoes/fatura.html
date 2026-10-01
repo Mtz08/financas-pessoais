@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Fatura {{ fatura.competencia|date:"m/Y" }}{% endblock %}
+{% block conteudo %}
+<p><a href="{% url 'cartoes:faturas' fatura.conta_id %}">‹ Faturas de {{ fatura.conta }}</a></p>
+<h1>Fatura {{ fatura.competencia|date:"m/Y" }} <span class="situacao situacao-{{ resumo.status|lower }}">{{ resumo.status|capfirst }}</span></h1>
+<div class="tiles">
+  <article class="tile"><small>Total</small><strong>{{ resumo.total_centavos|reais }}</strong></article>
+  <article class="tile"><small>Pago</small><strong>{{ resumo.pago_centavos|reais }}</strong></article>
+  <article class="tile"><small>Restante</small><strong>{{ resumo.restante_centavos|reais }}</strong></article>
+  <article class="tile"><small>Fecha / vence</small><strong>{{ fatura.data_fechamento|date:"d/m" }} · {{ fatura.data_vencimento|date:"d/m" }}</strong></article>
+</div>
+
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}
+    <tr>
+      <td>{{ l.data|date:"d/m/Y" }}</td>
+      <td><a href="{% url 'lancamentos:editar' l.pk %}">{{ l.descricao_completa }}</a></td>
+      <td>{{ l.categoria|default:"—" }}</td>
+      <td class="num {{ l.valor_com_sinal|sinal }}">{{ l.valor_com_sinal|reais }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">Nenhum lançamento nesta fatura.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if resumo.restante_centavos %}
+<section>
+  <h2>Registrar pagamento</h2>
+  {% include "_form.html" with botao="Pagar fatura" %}
+</section>
+{% endif %}
+{% endblock %}
