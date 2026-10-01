@@ -1,0 +1,25 @@
+# Blueprint do Render (plano free). O banco fica no Neon: cole a URL em DATABASE_URL.
+services:
+  - type: web
+    name: financas
+    runtime: python
+    plan: free
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput
+    startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers 2
+    # Versão do Python: arquivo .python-version (3.13), que aceita versão parcial.
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false   # informe no painel: URL do Neon com ?sslmode=require
+      - key: ALLOWED_HOSTS
+        sync: false   # ex.: financas-xxxx.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false   # ex.: https://financas-xxxx.onrender.com
+      - key: AXES_PROXY_COUNT
+        value: "1"
