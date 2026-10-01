@@ -1,4 +1,4 @@
-{% load static %}<!doctype html>
+{% load static financas %}<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -12,23 +12,44 @@
   {% block cabecalho %}{% endblock %}
 </head>
 <body>
-  {% if user.is_authenticated %}
-  <header class="container">
-    <nav class="menu">
-      <ul><li><a href="{% url 'dashboard' %}" class="marca"><strong>Finanças</strong></a></li></ul>
-      <ul class="menu-desktop">{% include "_menu.html" %}</ul>
-      <details class="menu-movel">
-        <summary>Menu</summary>
-        <ul>{% include "_menu.html" %}</ul>
-      </details>
-    </nav>
+{% if user.is_authenticated %}
+<div class="app">
+  <aside class="lateral" aria-label="Navegação principal">
+    <a href="{% url 'dashboard' %}" class="marca"><span class="marca-icone">R$</span> Finanças</a>
+    <nav class="nav-lateral">{% include "_menu.html" %}</nav>
+    <div class="lateral-rodape">
+      <span class="usuario"><span class="avatar">{{ user.username|first|upper }}</span>{{ user.username }}</span>
+      <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
+        <button type="submit" class="botao-icone" title="Sair" aria-label="Sair">{% icone "sair" %}</button>
+      </form>
+    </div>
+  </aside>
+
+  <header class="topo">
+    <a href="{% url 'dashboard' %}" class="marca"><span class="marca-icone">R$</span> Finanças</a>
+    <details class="menu-movel">
+      <summary aria-label="Abrir menu">{% icone "menu" %}</summary>
+      <nav class="nav-lateral">
+        {% include "_menu.html" %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+          <button type="submit" class="nav-link botao-sair">{% icone "sair" %} Sair</button>
+        </form>
+      </nav>
+    </details>
   </header>
-  {% endif %}
-  <main class="container">
+
+  <main class="conteudo">
     {% for mensagem in messages %}
-      <article class="aviso aviso-{{ mensagem.tags }}" role="status">{{ mensagem }}</article>
+      <div class="aviso aviso-{{ mensagem.tags }}" role="status">{{ mensagem }}</div>
     {% endfor %}
     {% block conteudo %}{% endblock %}
   </main>
+</div>
+{% else %}
+<main class="pagina-publica">
+  {% for mensagem in messages %}<div class="aviso aviso-{{ mensagem.tags }}" role="status">{{ mensagem }}</div>{% endfor %}
+  {% block publico %}{% endblock %}
+</main>
+{% endif %}
 </body>
 </html>

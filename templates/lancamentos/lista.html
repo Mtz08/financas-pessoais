@@ -5,17 +5,17 @@
 <div class="titulo-acoes">
   <h1>Lançamentos</h1>
   <div class="botoes">
-    <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">+ Despesa</a>
-    <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="secondary">+ Receita</a>
-    <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">Transferência</a>
-    <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">Parcelado</a>
+    <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">{% icone "mais" %} Despesa</a>
+    <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="receita">{% icone "mais" %} Receita</a>
+    <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">{% icone "transferir" %} Transferência</a>
+    <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">{% icone "parcelado" %} Parcelado</a>
   </div>
 </div>
 
 <nav class="navegacao-mes" aria-label="Mês">
-  <a href="?mes={{ mes_anterior|date:'Y-m' }}&{{ parametros }}" aria-label="Mês anterior">‹</a>
+  <a href="?mes={{ mes_anterior|date:'Y-m' }}&{{ parametros }}" aria-label="Mês anterior">{% icone "anterior" %}</a>
   <strong>{{ mes|date:"F \d\e Y"|capfirst }}</strong>
-  <a href="?mes={{ mes_seguinte|date:'Y-m' }}&{{ parametros }}" aria-label="Mês seguinte">›</a>
+  <a href="?mes={{ mes_seguinte|date:'Y-m' }}&{{ parametros }}" aria-label="Mês seguinte">{% icone "proximo" %}</a>
 </nav>
 
 <details class="filtros">

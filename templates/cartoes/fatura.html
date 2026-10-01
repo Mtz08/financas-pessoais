@@ -13,13 +13,13 @@
 
 <div class="tabela-rolavel">
 <table>
-  <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="num">Valor</th></tr></thead>
+  <thead><tr><th>Data</th><th>Descrição</th><th class="col-opcional">Categoria</th><th class="num">Valor</th></tr></thead>
   <tbody>
   {% for l in lancamentos %}
     <tr>
       <td>{{ l.data|date:"d/m/Y" }}</td>
       <td><a href="{% url 'lancamentos:editar' l.pk %}">{{ l.descricao_completa }}</a></td>
-      <td>{{ l.categoria|default:"—" }}</td>
+      <td class="col-opcional">{{ l.categoria|default:"—" }}</td>
       <td class="num {{ l.valor_com_sinal|sinal }}">{{ l.valor_com_sinal|reais }}</td>
     </tr>
   {% empty %}

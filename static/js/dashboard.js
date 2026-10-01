@@ -11,7 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const reais = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const reaisCurto = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
 
-  Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  Chart.defaults.font.family = '"Inter", "Segoe UI", system-ui, sans-serif';
+  Chart.defaults.font.size = 12;
   Chart.defaults.color = cor("--texto-mudo");
   Chart.defaults.borderColor = cor("--grade");
 
@@ -60,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: { position: "top", align: "start", labels: { boxWidth: 12, color: cor("--texto-secundario") } },
+          legend: { position: "top", align: "start", labels: { boxWidth: 12, color: cor("--texto-mudo"), usePointStyle: true, pointStyle: "rectRounded" } },
           tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${reais.format(ctx.parsed.y)}` } },
         },
         scales: {

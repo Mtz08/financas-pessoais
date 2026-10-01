@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block titulo %}Entrar{% endblock %}
-{% block conteudo %}
-<article class="login">
-  <h1>Finanças</h1>
-  <form method="post" novalidate>
+{% block publico %}
+<div class="login">
+  <div class="login-marca">
+    <span class="marca-icone marca-icone-grande">R$</span>
+    <h1>Finanças</h1>
+    <p class="muted">Entre para acessar suas contas</p>
+  </div>
+  <form method="post" class="cartao-form" novalidate>
     {% csrf_token %}
     {% if form.non_field_errors %}
-      <p class="erro" role="alert">Usuário ou senha incorretos. Após 5 tentativas o acesso é bloqueado por 1 hora.</p>
+      <div class="aviso aviso-error" role="alert">Usuário ou senha incorretos. Após 5 tentativas o acesso é bloqueado por 1 hora.</div>
     {% endif %}
     <label>Usuário
       <input type="text" name="username" autocomplete="username" required autofocus value="{{ form.username.value|default:'' }}">
@@ -17,5 +21,5 @@
     <input type="hidden" name="next" value="{{ next }}">
     <button type="submit">Entrar</button>
   </form>
-</article>
+</div>
 {% endblock %}

@@ -7,42 +7,45 @@
 {% endblock %}
 {% block conteudo %}
 <div class="titulo-acoes">
-  <h1>Visão geral</h1>
+  <div>
+    <h1>Visão geral</h1>
+    <p class="muted subtitulo">Resumo das suas finanças no mês</p>
+  </div>
   <nav class="navegacao-mes" aria-label="Mês">
-    <a href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">‹</a>
+    <a href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">{% icone "anterior" %}</a>
     <strong>{{ mes|date:"F \d\e Y"|capfirst }}</strong>
-    <a href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Mês seguinte">›</a>
+    <a href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Mês seguinte">{% icone "proximo" %}</a>
   </nav>
 </div>
 
 <div class="tiles">
   <article class="tile">
-    <small>Saldo disponível hoje</small>
+    <div class="kpi-topo">Saldo disponível hoje <span class="kpi-icone kpi-azul">{% icone "saldo" %}</span></div>
     <strong class="{{ saldo_disponivel|sinal }}">{{ saldo_disponivel|reais }}</strong>
     <small class="muted">conta corrente + dinheiro</small>
   </article>
   <article class="tile">
-    <small>Receitas do mês</small>
+    <div class="kpi-topo">Receitas do mês <span class="kpi-icone kpi-verde">{% icone "entrada" %}</span></div>
     <strong>{{ resumo.receitas|reais }}</strong>
     {% if resumo.receitas_pendentes %}<small class="muted">{{ resumo.receitas_pendentes|reais }} a receber</small>{% endif %}
   </article>
   <article class="tile">
-    <small>Despesas do mês</small>
+    <div class="kpi-topo">Despesas do mês <span class="kpi-icone kpi-vermelho">{% icone "saida" %}</span></div>
     <strong>{{ resumo.despesas|reais }}</strong>
     {% if resumo.despesas_pendentes %}<small class="muted">{{ resumo.despesas_pendentes|reais }} pendentes</small>{% endif %}
   </article>
   <article class="tile">
-    <small>Resultado do mês</small>
+    <div class="kpi-topo">Resultado do mês <span class="kpi-icone kpi-roxo">{% icone "resultado" %}</span></div>
     <strong class="{{ resumo.resultado|sinal }}">{{ resumo.resultado|reais }}</strong>
     <small class="muted">receitas − despesas</small>
   </article>
 </div>
 
 <div class="acoes-rapidas">
-  <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">+ Despesa</a>
-  <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="secondary">+ Receita</a>
-  <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">Transferência</a>
-  <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">Parcelado</a>
+  <a href="{% url 'lancamentos:novo' 'despesa' %}" role="button">{% icone "mais" %} Despesa</a>
+  <a href="{% url 'lancamentos:novo' 'receita' %}" role="button" class="receita">{% icone "mais" %} Receita</a>
+  <a href="{% url 'lancamentos:transferencia_nova' %}" role="button" class="secondary outline">{% icone "transferir" %} Transferência</a>
+  <a href="{% url 'lancamentos:parcelado_novo' %}" role="button" class="secondary outline">{% icone "parcelado" %} Parcelado</a>
 </div>
 
 {% if alertas %}

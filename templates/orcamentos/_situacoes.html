@@ -3,8 +3,8 @@
 <div class="orcamento orcamento-{{ s.nivel }}">
   <div class="orcamento-cabecalho">
     <span>
-      {% if s.nivel == "estourado" %}<span class="icone" aria-hidden="true">⛔</span>
-      {% elif s.nivel == "alerta" %}<span class="icone" aria-hidden="true">⚠️</span>{% endif %}
+      {% if s.nivel == "estourado" %}<span class="icone-estourado">{% icone "alerta" %}</span>
+      {% elif s.nivel == "alerta" %}<span class="icone-alerta">{% icone "alerta" %}</span>{% endif %}
       <strong>{{ s.categoria }}</strong>
       {% if s.nivel == "estourado" %}<small class="situacao situacao-vencida">Limite atingido</small>
       {% elif s.nivel == "alerta" %}<small class="situacao situacao-fechada">Acima de 80%</small>{% endif %}

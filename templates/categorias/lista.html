@@ -15,7 +15,7 @@
       <li class="{% if not raiz.ativo %}arquivado{% endif %}">
         <strong>{{ raiz.nome }}</strong>{% if not raiz.ativo %} <small>(arquivada)</small>{% endif %}
         {% include "categorias/_acoes.html" with categoria=raiz %}
-        <a href="{% url 'categorias:nova' %}?pai={{ raiz.pk }}&tipo={{ raiz.tipo }}" class="pequeno">+ subcategoria</a>
+        <a href="{% url 'categorias:nova' %}?pai={{ raiz.pk }}&tipo={{ raiz.tipo }}" class="link-sub">+ subcategoria</a>
         <ul>
         {% for sub in raiz.subcategorias.all %}
           <li class="{% if not sub.ativo %}arquivado{% endif %}">

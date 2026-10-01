@@ -2,13 +2,15 @@
 {% load financas %}
 {% block titulo %}Orçamentos{% endblock %}
 {% block conteudo %}
+<div class="titulo-acoes">
 <h1>Orçamentos</h1>
 <nav class="navegacao-mes" aria-label="Mês">
-  <a href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">‹</a>
+  <a href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">{% icone "anterior" %}</a>
   <strong>{{ mes|date:"F \d\e Y"|capfirst }}</strong>
-  <a href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Mês seguinte">›</a>
+  <a href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Mês seguinte">{% icone "proximo" %}</a>
 </nav>
 
+</div>
 {% include "orcamentos/_situacoes.html" with situacoes=situacoes %}
 
 <details>

@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% block titulo %}{{ titulo }}{% endblock %}
 {% block conteudo %}
-<h1>{{ titulo }}</h1>
+<div class="titulo-acoes"><h1>{{ titulo }}</h1></div>
 {% if lancamento.parcelamento_id %}
   <p class="nota">Parcela {{ lancamento.numero_parcela }} de {{ lancamento.parcelamento.quantidade_parcelas }}.
   Em “Esta e as próximas” e “Todas”, cada parcela mantém a própria data e fatura.</p>
 {% elif lancamento.recorrencia_id %}
   <p class="nota">Lançamento recorrente. Em “Todas”, ocorrências já pagas de outros meses não são alteradas.</p>
 {% endif %}
-{% include "_form.html" %}
-{% if lancamento %}
-  <p><a href="{% url 'lancamentos:excluir' lancamento.pk %}" class="perigo">Excluir este lançamento</a></p>
-{% endif %}
+<div class="cartao-form">
+  {% include "_form.html" %}
+  {% if lancamento %}
+    <p class="rodape-form"><a href="{% url 'lancamentos:excluir' lancamento.pk %}" class="perigo">Excluir este lançamento</a></p>
+  {% endif %}
+</div>
 {% endblock %}
