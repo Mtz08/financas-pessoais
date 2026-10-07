@@ -14,7 +14,7 @@ class Divida(ModeloComDatas):
     credor = models.CharField("Para quem devo", max_length=100)
     descricao = models.CharField("Descrição", max_length=120, blank=True)
     valor_centavos = models.BigIntegerField()
-    data = models.DateField("Desde")
+    data = models.DateField("Data da dívida")
     vencimento = models.DateField(null=True, blank=True)
     observacao = models.TextField("Observação", blank=True)
     paga = models.BooleanField(default=False)

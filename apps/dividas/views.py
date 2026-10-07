@@ -14,7 +14,7 @@ from .services import agrupar_por_mes, dar_baixa, reabrir, resumir
 
 class DividaForm(ModelFormIdempotente):
     valor_centavos = CampoReais(label="Valor (R$)")
-    data = CampoData(label="Desde")
+    data = CampoData(label="Data da dívida", help_text="Define em qual mês ela aparece na aba Por mês.")
     vencimento = CampoData(label="Vencimento (opcional)", required=False)
 
     class Meta:

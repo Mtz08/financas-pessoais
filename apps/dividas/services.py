@@ -24,7 +24,7 @@ def reabrir(divida: Divida) -> Divida:
 
 @dataclass(frozen=True)
 class GrupoMes:
-    mes: date | None  # dia 1º do mês de vencimento; None = sem vencimento
+    mes: date  # dia 1º do mês da data da dívida ("Desde")
     dividas: list[Divida]
 
     @property
@@ -33,14 +33,11 @@ class GrupoMes:
 
 
 def agrupar_por_mes(dividas) -> list[GrupoMes]:
-    """Agrupa pelo mês de vencimento, do mais antigo ao mais novo;
-    as sem vencimento vão para um grupo no final."""
-    grupos: dict[date | None, list[Divida]] = {}
-    for divida in dividas:
-        chave = dates.primeiro_dia(divida.vencimento) if divida.vencimento else None
-        grupos.setdefault(chave, []).append(divida)
-    ordem = sorted(grupos, key=lambda mes: (mes is None, mes or date.min))
-    return [GrupoMes(mes, grupos[mes]) for mes in ordem]
+    """Agrupa pelo mês da data da dívida (campo "Desde"), do mais antigo ao mais novo."""
+    grupos: dict[date, list[Divida]] = {}
+    for divida in sorted(dividas, key=lambda d: (d.data, d.id)):
+        grupos.setdefault(dates.primeiro_dia(divida.data), []).append(divida)
+    return [GrupoMes(mes, grupos[mes]) for mes in sorted(grupos)]
 
 
 @dataclass(frozen=True)

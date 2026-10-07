@@ -117,21 +117,19 @@ def test_tela_abre_e_exige_login(client, cliente_logado, divida):
 
 # --- Aba "Por mês" -------------------------------------------------------
 
-def test_agrupa_pelo_mes_de_vencimento_com_sem_vencimento_no_final(divida):
+def test_agrupa_pelo_mes_da_data_da_divida(divida):
     from apps.dividas.services import agrupar_por_mes
-    divida(credor="Sem data", valor_centavos=1_000)
-    divida(credor="Nov A", valor_centavos=2_000, vencimento=date(2026, 11, 30))
-    divida(credor="Out", valor_centavos=4_000, vencimento=date(2026, 10, 5))
-    divida(credor="Nov B", valor_centavos=3_000, vencimento=date(2026, 11, 2))
+    divida(credor="Nov A", valor_centavos=2_000, data=date(2026, 11, 30), vencimento=date(2026, 9, 1))
+    divida(credor="Out", valor_centavos=4_000, data=date(2026, 10, 5))
+    divida(credor="Nov B", valor_centavos=3_000, data=date(2026, 11, 2), vencimento=date(2027, 1, 1))
     grupos = agrupar_por_mes(Divida.objects.filter(paga=False))
-    assert [(g.mes, g.total) for g in grupos] == [
-        (date(2026, 10, 1), 4_000), (date(2026, 11, 1), 5_000), (None, 1_000)]
-    assert sorted(d.credor for d in grupos[1].dividas) == ["Nov A", "Nov B"]
+    assert [(g.mes, g.total) for g in grupos] == [(date(2026, 10, 1), 4_000), (date(2026, 11, 1), 5_000)]
+    assert [d.credor for d in grupos[1].dividas] == ["Nov B", "Nov A"]  # vencimento não influencia
 
 
 def test_aba_por_mes_mostra_grupos_e_ignora_pagas(cliente_logado, divida):
-    divida(credor="Credor Outubro", vencimento=date(2026, 10, 5))
-    dar_baixa(divida(credor="Credor Pago", vencimento=date(2026, 10, 6)), date(2026, 10, 7))
+    divida(credor="Credor Outubro", data=date(2026, 10, 5))
+    dar_baixa(divida(credor="Credor Pago", data=date(2026, 10, 6)), date(2026, 10, 7))
     html = cliente_logado.get("/dividas/?visao=mes").content.decode()
     assert "Outubro de 2026" in html
     assert 'href="?visao=mes" aria-current="page"' in html

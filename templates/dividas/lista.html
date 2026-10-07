@@ -38,15 +38,14 @@
   <section class="grupo-mes">
     <div class="grupo-mes-cabecalho">
       <h2>
-        {% if g.mes %}{{ g.mes|date:"F \d\e Y"|capfirst }}{% else %}Sem vencimento{% endif %}
-        {% if g.mes and g.mes < mes_atual %}<span class="situacao situacao-vencida">atrasado</span>
-        {% elif g.mes == mes_atual %}<span class="situacao situacao-fechada">este mês</span>{% endif %}
+        {{ g.mes|date:"F \d\e Y"|capfirst }}
+        {% if g.mes == mes_atual %}<span class="situacao situacao-aberta">este mês</span>{% endif %}
       </h2>
       <span class="grupo-mes-total">{{ g.dividas|length }} dívida{{ g.dividas|length|pluralize }} · <strong>{{ g.total|reais }}</strong></span>
     </div>
     <div class="tabela-rolavel">
     <table>
-      <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
+      <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Data</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
       <tbody>{% for d in g.dividas %}{% include "dividas/_linha.html" %}{% endfor %}</tbody>
     </table>
     </div>
@@ -58,7 +57,7 @@
   <h2>Em aberto</h2>
   <div class="tabela-rolavel">
   <table>
-    <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
+    <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Data</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
     <tbody>
     {% for d in abertas %}
       {% include "dividas/_linha.html" %}
