@@ -4,6 +4,7 @@ services:
     name: financas
     runtime: python
     plan: free
+    region: ohio   # mesma região do banco no Neon (AWS us-east-2): menos latência por consulta
     buildCommand: >-
       pip install -r requirements.txt &&
       python manage.py collectstatic --noinput &&

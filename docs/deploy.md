@@ -14,9 +14,11 @@ A versão do Python vem do arquivo `.python-version` (3.13).
 
 ## 1. Banco no Neon
 
-1. Crie uma conta em **neon.tech** e um projeto (região: São Paulo, se disponível).
+1. Crie uma conta em **neon.tech** e um projeto na região **AWS US East 2 (Ohio)**, a mesma do
+   `render.yaml` (o Render não tem região no Brasil; site e banco perto um do outro é o que importa).
+   Deixe ligado só o "Banco de dados Postgres".
 2. Em **Connect**, copie a *connection string*. Ela tem o formato
-   `postgresql://usuario:senha@ep-xxxx.sa-east-1.aws.neon.tech/neondb?sslmode=require`.
+   `postgresql://usuario:senha@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require`.
 3. Guarde essa URL: ela é a senha do seu banco. Não a coloque no GitHub.
 
 ## 2. Site no Render
