@@ -500,3 +500,6 @@ button.botao-baixa {
 button.botao-baixa:hover { border-color: var(--positivo); }
 button.botao-baixa .icone { width: 15px; height: 15px; }
 .arquivado-suave td { color: var(--texto-3); }
+
+/* Pendentes ao lado dos totais (não entram no resultado). */
+.resumo-linha > span small { font-size: .72rem; font-weight: 400; color: var(--texto-3); }

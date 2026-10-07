@@ -25,19 +25,19 @@
     <small class="muted">conta corrente + dinheiro</small>
   </article>
   <article class="tile">
-    <div class="kpi-topo">Receitas do mês <span class="kpi-icone kpi-verde">{% icone "entrada" %}</span></div>
+    <div class="kpi-topo">Recebido no mês <span class="kpi-icone kpi-verde">{% icone "entrada" %}</span></div>
     <strong>{{ resumo.receitas|reais }}</strong>
-    {% if resumo.receitas_pendentes %}<small class="muted">{{ resumo.receitas_pendentes|reais }} a receber</small>{% endif %}
+    <small class="muted">{% if resumo.receitas_pendentes %}+ {{ resumo.receitas_pendentes|reais }} a receber{% else %}nada pendente{% endif %}</small>
   </article>
   <article class="tile">
-    <div class="kpi-topo">Despesas do mês <span class="kpi-icone kpi-vermelho">{% icone "saida" %}</span></div>
+    <div class="kpi-topo">Pago no mês <span class="kpi-icone kpi-vermelho">{% icone "saida" %}</span></div>
     <strong>{{ resumo.despesas|reais }}</strong>
-    {% if resumo.despesas_pendentes %}<small class="muted">{{ resumo.despesas_pendentes|reais }} pendentes</small>{% endif %}
+    <small class="muted">{% if resumo.despesas_pendentes %}+ {{ resumo.despesas_pendentes|reais }} a pagar{% else %}nada pendente{% endif %}</small>
   </article>
   <article class="tile">
     <div class="kpi-topo">Resultado do mês <span class="kpi-icone kpi-roxo">{% icone "resultado" %}</span></div>
     <strong class="{{ resumo.resultado|sinal }}">{{ resumo.resultado|reais }}</strong>
-    <small class="muted">receitas − despesas</small>
+    <small class="muted">recebido − pago</small>
   </article>
 </div>
 

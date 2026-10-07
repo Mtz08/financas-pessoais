@@ -25,8 +25,13 @@ class FiltroRelatorio:
 
 @dataclass(frozen=True)
 class Totais:
+    """`receitas` e `despesas` são só as PAGAS: são elas que formam o resultado.
+    As pendentes ficam à parte, como previsão, até serem marcadas como pagas."""
+
     receitas: int
     despesas: int
+    receitas_pendentes: int = 0
+    despesas_pendentes: int = 0
 
     @property
     def resultado(self) -> int:
@@ -48,11 +53,15 @@ def filtrar(filtro: FiltroRelatorio) -> QuerySet[Lancamento]:
 
 def totais(consulta: QuerySet[Lancamento]) -> Totais:
     """Transferências não entram: não são receita nem despesa."""
+    receita, despesa = Q(tipo=Lancamento.Tipo.RECEITA), Q(tipo=Lancamento.Tipo.DESPESA)
+    pago, pendente = Q(status=Lancamento.Status.PAGO), Q(status=Lancamento.Status.PENDENTE)
     somas = consulta.aggregate(
-        receitas=Sum("valor_centavos", filter=Q(tipo=Lancamento.Tipo.RECEITA)),
-        despesas=Sum("valor_centavos", filter=Q(tipo=Lancamento.Tipo.DESPESA)),
+        receitas=Sum("valor_centavos", filter=receita & pago),
+        despesas=Sum("valor_centavos", filter=despesa & pago),
+        receitas_pendentes=Sum("valor_centavos", filter=receita & pendente),
+        despesas_pendentes=Sum("valor_centavos", filter=despesa & pendente),
     )
-    return Totais(somas["receitas"] or 0, somas["despesas"] or 0)
+    return Totais(**{campo: valor or 0 for campo, valor in somas.items()})
 
 
 def escrever_csv(consulta: QuerySet[Lancamento], destino: IO[str]) -> None:

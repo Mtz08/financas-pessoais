@@ -11,6 +11,7 @@ from django.db.models.functions import Coalesce, TruncMonth
 from apps.cartoes.models import Fatura
 from apps.cartoes.services import ResumoFatura, resumir_fatura
 from apps.lancamentos.models import Lancamento
+from apps.relatorios.services import Totais, totais
 from core import dates
 
 RECEITA = Q(tipo=Lancamento.Tipo.RECEITA)
@@ -18,30 +19,13 @@ DESPESA = Q(tipo=Lancamento.Tipo.DESPESA)
 PENDENTE = Q(status=Lancamento.Status.PENDENTE)
 
 
-@dataclass(frozen=True)
-class ResumoMes:
-    receitas: int
-    despesas: int
-    receitas_pendentes: int
-    despesas_pendentes: int
-
-    @property
-    def resultado(self) -> int:
-        return self.receitas - self.despesas
-
-
 def _no_mes(mes: date):
     return Lancamento.objects.filter(data__gte=dates.primeiro_dia(mes), data__lte=dates.ultimo_dia(mes))
 
 
-def resumo_do_mes(mes: date) -> ResumoMes:
-    s = _no_mes(mes).aggregate(
-        receitas=Sum("valor_centavos", filter=RECEITA),
-        despesas=Sum("valor_centavos", filter=DESPESA),
-        receitas_pendentes=Sum("valor_centavos", filter=RECEITA & PENDENTE),
-        despesas_pendentes=Sum("valor_centavos", filter=DESPESA & PENDENTE),
-    )
-    return ResumoMes(*(s[k] or 0 for k in ("receitas", "despesas", "receitas_pendentes", "despesas_pendentes")))
+def resumo_do_mes(mes: date) -> Totais:
+    """Resultado do mês só com o que foi pago; pendentes aparecem à parte."""
+    return totais(_no_mes(mes))
 
 
 def gastos_por_categoria(mes: date) -> list[dict]:

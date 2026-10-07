@@ -12,9 +12,7 @@
 
 {% if totais %}
 <div class="resumo-linha">
-  <span>Receitas <strong class="positivo">{{ totais.receitas|reais }}</strong></span>
-  <span>Despesas <strong class="negativo">{{ totais.despesas|reais }}</strong></span>
-  <span>Resultado <strong class="{{ totais.resultado|sinal }}">{{ totais.resultado|reais }}</strong></span>
+  {% include "_totais.html" %}
   <a href="?{{ query_csv }}&formato=csv" role="button" class="secondary outline">Exportar CSV</a>
 </div>
 
