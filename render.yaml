@@ -17,9 +17,7 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false   # informe no painel: URL do Neon com ?sslmode=require
-      - key: ALLOWED_HOSTS
-        sync: false   # ex.: financas-xxxx.onrender.com
-      - key: CSRF_TRUSTED_ORIGINS
-        sync: false   # ex.: https://financas-xxxx.onrender.com
+      # ALLOWED_HOSTS e CSRF_TRUSTED_ORIGINS: o settings usa RENDER_EXTERNAL_HOSTNAME,
+      # que o Render define sozinho. Só preencha se usar um domínio próprio.
       - key: AXES_PROXY_COUNT
         value: "1"
