@@ -28,46 +28,60 @@
   </article>
 </div>
 
-<h2>Em aberto</h2>
-<div class="tabela-rolavel">
-<table>
-  <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
-  <tbody>
-  {% for d in abertas %}
-    <tr>
-      <td><a href="{% url 'dividas:editar' d.pk %}" class="link-discreto">{{ d.credor }}</a></td>
-      <td class="col-opcional">{{ d.descricao|default:"—" }}</td>
-      <td class="col-opcional">{{ d.data|date:"d/m/Y" }}</td>
-      <td>
-        {% if d.vencimento %}{{ d.vencimento|date:"d/m/y" }}{% if d.vencimento < hoje %} <span class="situacao situacao-vencida">vencida</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}
-      </td>
-      <td class="num">{{ d.valor_centavos|reais }}</td>
-      <td class="num">
-        <form method="post" action="{% url 'dividas:baixa' d.pk %}" class="inline"
-              data-confirmar="Dar baixa em “{{ d }}” ({{ d.valor_centavos|reais }}) como paga hoje?">
-          {% csrf_token %}<button type="submit" class="pequeno botao-baixa">{% icone "check" %} Dar baixa</button>
-        </form>
-      </td>
-    </tr>
-  {% empty %}
-    <tr><td colspan="6" class="muted">Nenhuma dívida em aberto.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+<nav class="abas" aria-label="Forma de visualizar">
+  <a href="?visao=lista" {% if visao == "lista" %}aria-current="page"{% endif %}>Lista</a>
+  <a href="?visao=mes" {% if visao == "mes" %}aria-current="page"{% endif %}>Por mês</a>
+</nav>
 
-{% if resumo.por_credor|length > 1 %}
-<h2>Por credor</h2>
-<div class="tabela-rolavel">
-<table>
-  <thead><tr><th>Para quem</th><th class="num">Dívidas</th><th class="num">Total</th></tr></thead>
-  <tbody>
-  {% for c in resumo.por_credor %}
-    <tr><td>{{ c.credor }}</td><td class="num">{{ c.qtd }}</td><td class="num">{{ c.total|reais }}</td></tr>
+{% if visao == "mes" %}
+  {% for g in grupos %}
+  <section class="grupo-mes">
+    <div class="grupo-mes-cabecalho">
+      <h2>
+        {% if g.mes %}{{ g.mes|date:"F \d\e Y"|capfirst }}{% else %}Sem vencimento{% endif %}
+        {% if g.mes and g.mes < mes_atual %}<span class="situacao situacao-vencida">atrasado</span>
+        {% elif g.mes == mes_atual %}<span class="situacao situacao-fechada">este mês</span>{% endif %}
+      </h2>
+      <span class="grupo-mes-total">{{ g.dividas|length }} dívida{{ g.dividas|length|pluralize }} · <strong>{{ g.total|reais }}</strong></span>
+    </div>
+    <div class="tabela-rolavel">
+    <table>
+      <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
+      <tbody>{% for d in g.dividas %}{% include "dividas/_linha.html" %}{% endfor %}</tbody>
+    </table>
+    </div>
+  </section>
+  {% empty %}
+  <p class="muted">Nenhuma dívida em aberto.</p>
   {% endfor %}
-  </tbody>
-</table>
-</div>
+{% else %}
+  <h2>Em aberto</h2>
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
+    <tbody>
+    {% for d in abertas %}
+      {% include "dividas/_linha.html" %}
+    {% empty %}
+      <tr><td colspan="6" class="muted">Nenhuma dívida em aberto.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  {% if resumo.por_credor|length > 1 %}
+  <h2>Por credor</h2>
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Para quem</th><th class="num">Dívidas</th><th class="num">Total</th></tr></thead>
+    <tbody>
+    {% for c in resumo.por_credor %}
+      <tr><td>{{ c.credor }}</td><td class="num">{{ c.qtd }}</td><td class="num">{{ c.total|reais }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
 {% endif %}
 
 {% if pagas %}

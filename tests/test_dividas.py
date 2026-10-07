@@ -113,3 +113,38 @@ def test_tela_abre_e_exige_login(client, cliente_logado, divida):
     assert "Credor Fictício" in html and "vencida" in html
     client.post("/sair/")
     assert client.get("/dividas/").status_code == 302
+
+
+# --- Aba "Por mês" -------------------------------------------------------
+
+def test_agrupa_pelo_mes_de_vencimento_com_sem_vencimento_no_final(divida):
+    from apps.dividas.services import agrupar_por_mes
+    divida(credor="Sem data", valor_centavos=1_000)
+    divida(credor="Nov A", valor_centavos=2_000, vencimento=date(2026, 11, 30))
+    divida(credor="Out", valor_centavos=4_000, vencimento=date(2026, 10, 5))
+    divida(credor="Nov B", valor_centavos=3_000, vencimento=date(2026, 11, 2))
+    grupos = agrupar_por_mes(Divida.objects.filter(paga=False))
+    assert [(g.mes, g.total) for g in grupos] == [
+        (date(2026, 10, 1), 4_000), (date(2026, 11, 1), 5_000), (None, 1_000)]
+    assert sorted(d.credor for d in grupos[1].dividas) == ["Nov A", "Nov B"]
+
+
+def test_aba_por_mes_mostra_grupos_e_ignora_pagas(cliente_logado, divida):
+    divida(credor="Credor Outubro", vencimento=date(2026, 10, 5))
+    dar_baixa(divida(credor="Credor Pago", vencimento=date(2026, 10, 6)), date(2026, 10, 7))
+    html = cliente_logado.get("/dividas/?visao=mes").content.decode()
+    assert "Outubro de 2026" in html
+    assert 'href="?visao=mes" aria-current="page"' in html
+    secao = html.split('class="grupo-mes"')[1].split("<details")[0]  # até a lista de pagas
+    assert "Credor Outubro" in secao and "Credor Pago" not in secao
+
+
+def test_baixa_na_aba_por_mes_volta_para_ela(cliente_logado, divida):
+    d = divida(vencimento=date(2026, 10, 5))
+    resposta = cliente_logado.post(f"/dividas/{d.pk}/baixa/?visao=mes")
+    assert resposta["Location"] == "/dividas/?visao=mes"
+
+
+def test_visao_invalida_cai_na_lista(cliente_logado, db):
+    html = cliente_logado.get("/dividas/?visao=xyz").content.decode()
+    assert 'href="?visao=lista" aria-current="page"' in html

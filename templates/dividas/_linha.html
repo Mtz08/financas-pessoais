@@ -1,0 +1,16 @@
+{% load financas %}
+<tr>
+  <td><a href="{% url 'dividas:editar' d.pk %}" class="link-discreto">{{ d.credor }}</a></td>
+  <td class="col-opcional">{{ d.descricao|default:"—" }}</td>
+  <td class="col-opcional">{{ d.data|date:"d/m/Y" }}</td>
+  <td>
+    {% if d.vencimento %}{{ d.vencimento|date:"d/m/y" }}{% if d.vencimento < hoje %} <span class="situacao situacao-vencida">vencida</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}
+  </td>
+  <td class="num">{{ d.valor_centavos|reais }}</td>
+  <td class="num">
+    <form method="post" action="{% url 'dividas:baixa' d.pk %}{% if visao == 'mes' %}?visao=mes{% endif %}" class="inline"
+          data-confirmar="Dar baixa em “{{ d }}” ({{ d.valor_centavos|reais }}) como paga hoje?">
+      {% csrf_token %}<button type="submit" class="pequeno botao-baixa">{% icone "check" %} Dar baixa</button>
+    </form>
+  </td>
+</tr>

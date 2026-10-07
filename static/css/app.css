@@ -503,3 +503,23 @@ button.botao-baixa .icone { width: 15px; height: 15px; }
 
 /* Pendentes ao lado dos totais (não entram no resultado). */
 .resumo-linha > span small { font-size: .72rem; font-weight: 400; color: var(--texto-3); }
+
+/* Abas (ex.: Dívidas: Lista | Por mês) */
+.abas {
+  display: inline-flex; gap: .2rem; margin: .25rem 0 1.25rem; padding: .25rem;
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: 10px;
+}
+.abas a {
+  padding: .4rem .95rem; border-radius: 7px; text-decoration: none;
+  font-size: .9rem; font-weight: 500; color: var(--texto-2);
+}
+.abas a:hover { background: var(--superficie-2); color: var(--texto); }
+.abas a[aria-current="page"] { background: var(--primaria-suave); color: var(--primaria); font-weight: 600; }
+
+.grupo-mes-cabecalho {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem;
+  margin: 1.5rem 0 .6rem;
+}
+.grupo-mes-cabecalho h2 { margin: 0; display: inline-flex; align-items: center; gap: .5rem; }
+.grupo-mes-total { color: var(--texto-3); font-size: .88rem; }
+.grupo-mes-total strong { color: var(--texto); font-size: 1rem; }

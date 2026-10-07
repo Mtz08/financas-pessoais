@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from core import dates
@@ -8,7 +9,7 @@ from core.forms import CampoData, CampoReais, ModelFormIdempotente
 from core.views import processar_formulario
 
 from .models import Divida
-from .services import dar_baixa, reabrir, resumir
+from .services import agrupar_por_mes, dar_baixa, reabrir, resumir
 
 
 class DividaForm(ModelFormIdempotente):
@@ -30,13 +31,21 @@ class DividaForm(ModelFormIdempotente):
         return self.cleaned_data["credor"].strip()
 
 
+VISOES = ("lista", "mes")
+
+
 def lista(request):
     hoje = dates.hoje()
+    visao = request.GET.get("visao") if request.GET.get("visao") in VISOES else "lista"
+    abertas = Divida.objects.filter(paga=False)
     return render(request, "dividas/lista.html", {
-        "abertas": Divida.objects.filter(paga=False),
+        "visao": visao,
+        "abertas": abertas,
+        "grupos": agrupar_por_mes(abertas) if visao == "mes" else [],
         "pagas": Divida.objects.filter(paga=True).order_by("-data_pagamento", "-id")[:50],
         "resumo": resumir(hoje),
         "hoje": hoje,
+        "mes_atual": dates.primeiro_dia(hoje),
     })
 
 
@@ -60,11 +69,18 @@ def editar(request, pk):
                                 contexto={**_contexto_form("Editar dívida"), "divida": divida})
 
 
+def _voltar_para_lista(request):
+    """Volta para a mesma aba (Lista ou Por mês) de onde a ação partiu."""
+    if request.GET.get("visao") == "mes":
+        return redirect(f"{reverse('dividas:lista')}?visao=mes")
+    return redirect("dividas:lista")
+
+
 @require_POST
 def baixa(request, pk):
     divida = dar_baixa(get_object_or_404(Divida, pk=pk, paga=False))
     messages.success(request, f"Baixa registrada: “{divida}”.")
-    return redirect("dividas:lista")
+    return _voltar_para_lista(request)
 
 
 @require_POST
