@@ -16,6 +16,7 @@ from django.utils import timezone
 from apps.cartoes.models import Fatura
 from apps.categorias.models import Categoria
 from apps.contas.models import Conta
+from apps.dividas.models import Divida
 from apps.lancamentos.models import Lancamento, Parcelamento, Recorrencia
 from apps.orcamentos.models import Orcamento
 from core.exceptions import RegraDeNegocio
@@ -23,7 +24,7 @@ from core.exceptions import RegraDeNegocio
 FORMATO = "financas-backup"
 VERSAO = 1
 # Ordem de dependência: quem é referenciado vem antes.
-MODELOS = [Conta, Categoria, Fatura, Recorrencia, Parcelamento, Lancamento, Orcamento]
+MODELOS = [Conta, Categoria, Fatura, Recorrencia, Parcelamento, Lancamento, Orcamento, Divida]
 
 
 def exportar() -> dict:
@@ -91,6 +92,7 @@ def apagar_tudo() -> None:
     Categoria.objects.filter(pai__isnull=False).delete()
     Categoria.objects.all().delete()
     Conta.objects.all().delete()
+    Divida.objects.all().delete()
 
 
 def _reiniciar_sequencias() -> None:

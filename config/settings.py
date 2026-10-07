@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.relatorios",
     "apps.backup",
     "apps.dashboard",
+    "apps.dividas",
 ]
 
 MIDDLEWARE = [

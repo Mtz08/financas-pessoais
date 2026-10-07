@@ -49,6 +49,11 @@ _ICONES = {
               '<path d="M12 9v4"/><path d="M12 17h.01"/>',
     "transferir": '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
     "parcelado": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+    "divida": '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>'
+              '<path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+    "pessoas": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'
+               '<path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',
+    "check": '<path d="M20 6 9 17l-5-5"/>',
     "anterior": '<path d="m15 18-6-6 6-6"/>',
     "proximo": '<path d="m9 18 6-6-6-6"/>',
 }

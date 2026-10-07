@@ -491,3 +491,12 @@ fieldset label { font-weight: 400; color: var(--texto); }
   .etiqueta { white-space: normal; margin-left: 0; }
   .situacao, button.status-pago, button.status-pendente { padding: .1rem .45rem; }
 }
+
+/* --- Dívidas ------------------------------------------------------------ */
+button.botao-baixa {
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: var(--positivo-suave); color: var(--positivo); border: 1px solid transparent;
+}
+button.botao-baixa:hover { border-color: var(--positivo); }
+button.botao-baixa .icone { width: 15px; height: 15px; }
+.arquivado-suave td { color: var(--texto-3); }

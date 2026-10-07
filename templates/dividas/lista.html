@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load financas %}
+{% block titulo %}Dívidas{% endblock %}
+{% block conteudo %}
+<div class="titulo-acoes">
+  <div>
+    <h1>Dívidas</h1>
+    <p class="muted subtitulo">O que você deve e a quem. Não desconta de nenhuma conta nem entra nos relatórios.</p>
+  </div>
+  <a href="{% url 'dividas:nova' %}" role="button">{% icone "mais" %} Nova dívida</a>
+</div>
+
+<div class="tiles">
+  <article class="tile">
+    <div class="kpi-topo">Total em aberto <span class="kpi-icone kpi-vermelho">{% icone "divida" %}</span></div>
+    <strong>{{ resumo.total_aberto|reais }}</strong>
+    <small class="muted">{{ resumo.quantidade_aberta }} dívida{{ resumo.quantidade_aberta|pluralize }} em aberto</small>
+  </article>
+  <article class="tile">
+    <div class="kpi-topo">Credores <span class="kpi-icone kpi-azul">{% icone "pessoas" %}</span></div>
+    <strong>{{ resumo.por_credor|length }}</strong>
+    <small class="muted">pessoas ou empresas</small>
+  </article>
+  <article class="tile">
+    <div class="kpi-topo">Vencidas <span class="kpi-icone kpi-roxo">{% icone "calendario" %}</span></div>
+    <strong class="{% if resumo.vencidas %}negativo{% endif %}">{{ resumo.vencidas }}</strong>
+    <small class="muted">com vencimento já passado</small>
+  </article>
+</div>
+
+<h2>Em aberto</h2>
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Para quem</th><th class="col-opcional">Descrição</th><th class="col-opcional">Desde</th><th>Vence</th><th class="num">Valor</th><th></th></tr></thead>
+  <tbody>
+  {% for d in abertas %}
+    <tr>
+      <td><a href="{% url 'dividas:editar' d.pk %}" class="link-discreto">{{ d.credor }}</a></td>
+      <td class="col-opcional">{{ d.descricao|default:"—" }}</td>
+      <td class="col-opcional">{{ d.data|date:"d/m/Y" }}</td>
+      <td>
+        {% if d.vencimento %}{{ d.vencimento|date:"d/m/y" }}{% if d.vencimento < hoje %} <span class="situacao situacao-vencida">vencida</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}
+      </td>
+      <td class="num">{{ d.valor_centavos|reais }}</td>
+      <td class="num">
+        <form method="post" action="{% url 'dividas:baixa' d.pk %}" class="inline"
+              data-confirmar="Dar baixa em “{{ d }}” ({{ d.valor_centavos|reais }}) como paga hoje?">
+          {% csrf_token %}<button type="submit" class="pequeno botao-baixa">{% icone "check" %} Dar baixa</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="muted">Nenhuma dívida em aberto.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if resumo.por_credor|length > 1 %}
+<h2>Por credor</h2>
+<div class="tabela-rolavel">
+<table>
+  <thead><tr><th>Para quem</th><th class="num">Dívidas</th><th class="num">Total</th></tr></thead>
+  <tbody>
+  {% for c in resumo.por_credor %}
+    <tr><td>{{ c.credor }}</td><td class="num">{{ c.qtd }}</td><td class="num">{{ c.total|reais }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if pagas %}
+<details>
+  <summary>Pagas ({{ pagas|length }}{% if pagas|length == 50 %}+{% endif %})</summary>
+  <table>
+    <thead><tr><th>Para quem</th><th class="num">Valor</th><th>Pago em</th><th></th></tr></thead>
+    <tbody>
+    {% for d in pagas %}
+      <tr class="arquivado-suave">
+        <td>{{ d }}</td>
+        <td class="num">{{ d.valor_centavos|reais }}</td>
+        <td>{{ d.data_pagamento|date:"d/m/Y" }}</td>
+        <td class="num acoes-linha">
+          <form method="post" action="{% url 'dividas:reabrir' d.pk %}" class="inline">{% csrf_token %}<button class="link">Reabrir</button></form>
+          <form method="post" action="{% url 'dividas:excluir' d.pk %}" class="inline" data-confirmar="Excluir “{{ d }}” do histórico?">{% csrf_token %}<button class="link perigo">Excluir</button></form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
+{% endif %}
+{% endblock %}
