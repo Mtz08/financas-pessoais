@@ -30,5 +30,6 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - run: python manage.py check --deploy --fail-level ERROR
+      - run: python manage.py collectstatic --noinput   # o mesmo passo do build no Render
       - run: python manage.py makemigrations --check --dry-run
       - run: pytest
