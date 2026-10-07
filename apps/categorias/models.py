@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
-from core.models import ModeloArquivavel
+from core.models import ModeloArquivavel, gerenciador_do_dono
 
 
 class Categoria(ModeloArquivavel):
@@ -12,6 +13,7 @@ class Categoria(ModeloArquivavel):
         RECEITA = "RECEITA", "Receita"
         DESPESA = "DESPESA", "Despesa"
 
+    dono = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="categorias")
     nome = models.CharField(max_length=60)
     tipo = models.CharField(max_length=7, choices=Tipo.choices)
     pai = models.ForeignKey(
@@ -22,6 +24,8 @@ class Categoria(ModeloArquivavel):
         related_name="subcategorias",
     )
 
+    objects = gerenciador_do_dono("dono")
+
     class Meta:
         ordering = ["tipo", "pai__nome", "nome"]
         constraints = [
@@ -29,7 +33,7 @@ class Categoria(ModeloArquivavel):
             # (em SQL, NULL != NULL, então o primeiro sozinho não bastaria).
             models.UniqueConstraint(fields=["pai", "nome"], name="categoria_nome_unico_no_pai"),
             models.UniqueConstraint(
-                fields=["tipo", "nome"], condition=Q(pai__isnull=True), name="categoria_raiz_nome_unico"
+                fields=["dono", "tipo", "nome"], condition=Q(pai__isnull=True), name="categoria_raiz_nome_unico"
             ),
             models.CheckConstraint(name="categoria_nao_e_pai_de_si", condition=~Q(pai=models.F("id"))),
         ]

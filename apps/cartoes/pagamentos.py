@@ -16,6 +16,8 @@ from .services import resumir_fatura
 
 @transaction.atomic
 def pagar_fatura(fatura: Fatura, conta_origem: Conta, valor_centavos: int, data: date) -> None:
+    if conta_origem.dono_id != fatura.conta.dono_id:
+        raise RegraDeNegocio("A conta de pagamento pertence a outro usuário.")
     if conta_origem.eh_cartao:
         raise RegraDeNegocio("A fatura deve ser paga a partir de conta corrente ou dinheiro.")
     criar_transferencia(

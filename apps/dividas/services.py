@@ -48,9 +48,9 @@ class ResumoDividas:
     por_credor: list[dict]
 
 
-def resumir(hoje: date | None = None) -> ResumoDividas:
+def resumir(usuario, hoje: date | None = None) -> ResumoDividas:
     hoje = hoje or dates.hoje()
-    abertas = Divida.objects.filter(paga=False)
+    abertas = Divida.objects.do_usuario(usuario).filter(paga=False)
     somas = abertas.aggregate(total=Sum("valor_centavos"), qtd=Count("id"))
     por_credor = list(
         abertas.values("credor").annotate(total=Sum("valor_centavos"), qtd=Count("id")).order_by("-total")

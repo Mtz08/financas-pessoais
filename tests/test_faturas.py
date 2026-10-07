@@ -11,7 +11,9 @@ from core.exceptions import RegraDeNegocio
 
 
 def _cartao(dia_fechamento, dia_vencimento):
-    return Conta.objects.create(nome=f"Cartão {dia_fechamento}/{dia_vencimento}", tipo="CARTAO",
+    from django.contrib.auth.models import User
+    dono, _ = User.objects.get_or_create(username="usuario_teste")
+    return Conta.objects.create(dono=dono, nome=f"Cartão {dia_fechamento}/{dia_vencimento}", tipo="CARTAO",
                                 data_saldo_inicial=date(2026, 1, 1),
                                 dia_fechamento=dia_fechamento, dia_vencimento=dia_vencimento)
 

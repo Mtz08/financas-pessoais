@@ -1,3 +1,7 @@
+"""Formulários de lançamentos. Todos recebem `usuario` e só oferecem contas e
+categorias desse usuário: um ID de outro dono enviado à força é recusado pelo
+próprio ModelChoiceField ("escolha inválida")."""
+
 from django import forms
 from django.db.models import Q
 
@@ -13,14 +17,15 @@ from .services.recorrencias import DadosRecorrencia
 ESCOPOS = [(escopo.value, rotulo) for escopo, rotulo in ESCOPO_ROTULOS.items()]
 
 
-def contas_ativas(incluir: Conta | None = None, sem_cartao: bool = False):
-    consulta = Conta.objects.filter(Q(ativo=True) | Q(pk=getattr(incluir, "pk", None)))
+def contas_ativas(usuario, incluir: Conta | None = None, sem_cartao: bool = False):
+    consulta = Conta.objects.do_usuario(usuario).filter(Q(ativo=True) | Q(pk=getattr(incluir, "pk", None)))
     return consulta.exclude(tipo=Conta.Tipo.CARTAO) if sem_cartao else consulta
 
 
-def categorias_do_tipo(tipo: str, incluir: Categoria | None = None):
+def categorias_do_tipo(usuario, tipo: str, incluir: Categoria | None = None):
     return (
-        Categoria.objects.filter(Q(ativo=True) | Q(pk=getattr(incluir, "pk", None)), tipo=tipo)
+        Categoria.objects.do_usuario(usuario)
+        .filter(Q(ativo=True) | Q(pk=getattr(incluir, "pk", None)), tipo=tipo)
         .select_related("pai")
         .order_by("pai__nome", "nome")
     )
@@ -37,13 +42,13 @@ class LancamentoForm(FormIdempotente):
         label="Aplicar a", choices=ESCOPOS, initial=Escopo.ESTA, widget=forms.RadioSelect, required=False
     )
 
-    def __init__(self, *args, tipo: str, lancamento: Lancamento | None = None, **kwargs):
+    def __init__(self, *args, usuario, tipo: str, lancamento: Lancamento | None = None, **kwargs):
         if lancamento:
             kwargs.setdefault("initial", _iniciais(lancamento))
         super().__init__(*args, **kwargs)
         self.tipo = tipo
-        self.fields["conta"].queryset = contas_ativas(getattr(lancamento, "conta", None))
-        self.fields["categoria"].queryset = categorias_do_tipo(tipo, getattr(lancamento, "categoria", None))
+        self.fields["conta"].queryset = contas_ativas(usuario, getattr(lancamento, "conta", None))
+        self.fields["categoria"].queryset = categorias_do_tipo(usuario, tipo, getattr(lancamento, "categoria", None))
         self.fields["data"].initial = dates.hoje()
         if not (lancamento and (lancamento.parcelamento_id or lancamento.recorrencia_id)):
             del self.fields["escopo"]
@@ -76,13 +81,14 @@ class TransferenciaForm(FormIdempotente):
     descricao = forms.CharField(label="Descrição", max_length=120, initial="Transferência")
     status = forms.ChoiceField(choices=Lancamento.Status.choices, initial=Lancamento.Status.PAGO)
 
-    def __init__(self, *args, saida: Lancamento | None = None, entrada: Lancamento | None = None, **kwargs):
+    def __init__(self, *args, usuario, saida: Lancamento | None = None, entrada: Lancamento | None = None,
+                 **kwargs):
         if saida and entrada:
             kwargs.setdefault("initial", {"origem": saida.conta, "destino": entrada.conta, "valor": saida.valor_centavos,
                                           "data": saida.data, "descricao": saida.descricao, "status": saida.status})
         super().__init__(*args, **kwargs)
-        self.fields["origem"].queryset = contas_ativas(getattr(saida, "conta", None))
-        self.fields["destino"].queryset = contas_ativas(getattr(entrada, "conta", None))
+        self.fields["origem"].queryset = contas_ativas(usuario, getattr(saida, "conta", None))
+        self.fields["destino"].queryset = contas_ativas(usuario, getattr(entrada, "conta", None))
         self.fields["data"].initial = dates.hoje()
 
     def clean(self):
@@ -104,10 +110,10 @@ class ParceladoForm(FormIdempotente):
     quantidade_parcelas = forms.IntegerField(label="Parcelas", min_value=2, max_value=72, initial=2)
     data_compra = CampoData(label="Data da compra")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["conta"].queryset = contas_ativas()
-        self.fields["categoria"].queryset = categorias_do_tipo(Lancamento.Tipo.DESPESA)
+        self.fields["conta"].queryset = contas_ativas(usuario)
+        self.fields["categoria"].queryset = categorias_do_tipo(usuario, Lancamento.Tipo.DESPESA)
         self.fields["data_compra"].initial = dates.hoje()
 
     def clean(self):
@@ -138,11 +144,13 @@ class RecorrenciaForm(FormIdempotente):
     data_inicio = CampoData(label="Início")
     data_fim = CampoData(label="Fim (opcional)", required=False)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["conta"].queryset = contas_ativas()
-        self.fields["categoria"].queryset = Categoria.objects.filter(ativo=True).select_related("pai").order_by(
-            "tipo", "pai__nome", "nome")
+        self.fields["conta"].queryset = contas_ativas(usuario)
+        self.fields["categoria"].queryset = (
+            Categoria.objects.do_usuario(usuario).filter(ativo=True).select_related("pai")
+            .order_by("tipo", "pai__nome", "nome")
+        )
         self.fields["data_inicio"].initial = dates.hoje()
 
     def clean(self):
@@ -165,10 +173,15 @@ class FiltroForm(forms.Form):
     """Filtros da listagem (GET). Valores inválidos são simplesmente ignorados."""
 
     mes = forms.CharField(required=False, widget=forms.TextInput(attrs={"type": "month"}))
-    conta = forms.ModelChoiceField(queryset=Conta.objects.all(), required=False, empty_label="Todas as contas")
-    categoria = forms.ModelChoiceField(
-        queryset=Categoria.objects.select_related("pai").order_by("tipo", "pai__nome", "nome"),
-        required=False, empty_label="Todas as categorias",
-    )
+    conta = forms.ModelChoiceField(queryset=Conta.objects.none(), required=False, empty_label="Todas as contas")
+    categoria = forms.ModelChoiceField(queryset=Categoria.objects.none(), required=False,
+                                       empty_label="Todas as categorias")
     tipo = forms.ChoiceField(choices=[("", "Todos os tipos"), *Lancamento.Tipo.choices], required=False)
     status = forms.ChoiceField(choices=[("", "Qualquer status"), *Lancamento.Status.choices], required=False)
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["conta"].queryset = Conta.objects.do_usuario(usuario)
+        self.fields["categoria"].queryset = (
+            Categoria.objects.do_usuario(usuario).select_related("pai").order_by("tipo", "pai__nome", "nome")
+        )

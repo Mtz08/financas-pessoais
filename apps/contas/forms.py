@@ -1,11 +1,11 @@
 from django import forms
 
-from core.forms import CampoData, CampoReais, ModelFormIdempotente
+from core.forms import CampoData, CampoReais, ComDono, ModelFormIdempotente
 
 from .models import Conta
 
 
-class ContaForm(ModelFormIdempotente):
+class ContaForm(ComDono, ModelFormIdempotente):
     saldo_inicial_centavos = CampoReais(label="Saldo inicial (R$)", permitir_negativo=True, initial=0)
     data_saldo_inicial = CampoData(label="Data do saldo inicial")
     limite_centavos = CampoReais(label="Limite (R$)", required=False)
@@ -23,6 +23,12 @@ class ContaForm(ModelFormIdempotente):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["limite_centavos"].widget.attrs["data-so-cartao"] = ""
+
+    def clean_nome(self):
+        nome = self.cleaned_data["nome"].strip()
+        if self._outros_do_usuario(Conta).filter(nome__iexact=nome).exists():
+            raise forms.ValidationError("Você já tem uma conta com esse nome.")
+        return nome
 
     def clean(self):
         dados = super().clean()

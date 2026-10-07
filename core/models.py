@@ -37,3 +37,18 @@ class ChaveIdempotencia(models.Model):
 
     def __str__(self):
         return str(self.chave)
+
+
+def gerenciador_do_dono(caminho_dono: str):
+    """Manager com `.do_usuario(usuario)`, que filtra pelo dono do registro.
+
+    `caminho_dono` é o lookup até o usuário: "dono" para Conta/Categoria/Dívida,
+    "conta__dono" para o que pertence a uma conta, "categoria__dono" para orçamento.
+    Toda consulta feita a partir de uma requisição deve começar por aqui.
+    """
+
+    class QuerySetDoDono(models.QuerySet):
+        def do_usuario(self, usuario):
+            return self.filter(**{caminho_dono: usuario})
+
+    return QuerySetDoDono.as_manager()

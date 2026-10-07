@@ -41,9 +41,9 @@ def test_ao_marcar_como_pago_entra_no_resultado(despesa, salario):
     assert (t.resultado, t.despesas_pendentes) == (80_000, 0)
 
 
-def test_dashboard_usa_a_mesma_regra(despesa, salario):
+def test_dashboard_usa_a_mesma_regra(despesa, salario, usuario):
     _lancar(despesa, salario, receita_paga=100_000, receita_pendente=50_000, despesa_pendente=20_000)
-    resumo = resumo_do_mes(MARCO)
+    resumo = resumo_do_mes(usuario, MARCO)
     assert (resumo.receitas, resumo.despesas, resumo.resultado) == (100_000, 0, 100_000)
 
 

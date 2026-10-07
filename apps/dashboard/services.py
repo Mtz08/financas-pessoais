@@ -19,19 +19,20 @@ DESPESA = Q(tipo=Lancamento.Tipo.DESPESA)
 PENDENTE = Q(status=Lancamento.Status.PENDENTE)
 
 
-def _no_mes(mes: date):
-    return Lancamento.objects.filter(data__gte=dates.primeiro_dia(mes), data__lte=dates.ultimo_dia(mes))
+def _no_mes(usuario, mes: date):
+    return Lancamento.objects.do_usuario(usuario).filter(
+        data__gte=dates.primeiro_dia(mes), data__lte=dates.ultimo_dia(mes))
 
 
-def resumo_do_mes(mes: date) -> Totais:
+def resumo_do_mes(usuario, mes: date) -> Totais:
     """Resultado do mês só com o que foi pago; pendentes aparecem à parte."""
-    return totais(_no_mes(mes))
+    return totais(_no_mes(usuario, mes))
 
 
-def gastos_por_categoria(mes: date) -> list[dict]:
+def gastos_por_categoria(usuario, mes: date) -> list[dict]:
     """Despesas do mês agrupadas pela categoria principal, maior primeiro."""
     return list(
-        _no_mes(mes)
+        _no_mes(usuario, mes)
         .filter(DESPESA)
         .annotate(grupo=Coalesce("categoria__pai__nome", "categoria__nome"))
         .values("grupo")
@@ -40,11 +41,11 @@ def gastos_por_categoria(mes: date) -> list[dict]:
     )
 
 
-def evolucao_mensal(ate_mes: date, meses: int = 12) -> list[dict]:
+def evolucao_mensal(usuario, ate_mes: date, meses: int = 12) -> list[dict]:
     """Receitas e despesas dos últimos `meses` meses (meses vazios = 0)."""
     inicio = dates.somar_meses(dates.primeiro_dia(ate_mes), -(meses - 1))
     linhas = (
-        Lancamento.objects.filter(data__gte=inicio, data__lte=dates.ultimo_dia(ate_mes))
+        Lancamento.objects.do_usuario(usuario).filter(data__gte=inicio, data__lte=dates.ultimo_dia(ate_mes))
         .annotate(mes=TruncMonth("data"))
         .values("mes")
         .annotate(receitas=Sum("valor_centavos", filter=RECEITA), despesas=Sum("valor_centavos", filter=DESPESA))
@@ -67,19 +68,19 @@ class ContasAVencer:
     faturas: list[ResumoFatura]
 
 
-def contas_a_vencer(dias: int = 30, hoje: date | None = None) -> ContasAVencer:
+def contas_a_vencer(usuario, dias: int = 30, hoje: date | None = None) -> ContasAVencer:
     """Despesas pendentes (fora do cartão) e faturas em aberto que vencem até
     `dias` à frente, incluindo as atrasadas."""
     hoje = hoje or dates.hoje()
     limite = hoje + timedelta(days=dias)
     lancamentos = list(
-        Lancamento.objects.filter(DESPESA & PENDENTE, fatura__isnull=True, data__lte=limite)
+        Lancamento.objects.do_usuario(usuario).filter(DESPESA & PENDENTE, fatura__isnull=True, data__lte=limite)
         .select_related("conta", "categoria", "parcelamento")
         .order_by("data")[:50]
     )
     faturas = [
         resumo
-        for resumo in map(resumir_fatura, Fatura.objects.filter(data_vencimento__lte=limite)
+        for resumo in map(resumir_fatura, Fatura.objects.do_usuario(usuario).filter(data_vencimento__lte=limite)
                           .select_related("conta").order_by("data_vencimento"))
         if resumo.restante_centavos > 0
     ]

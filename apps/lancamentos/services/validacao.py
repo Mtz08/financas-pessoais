@@ -18,6 +18,12 @@ def validar_categoria(categoria: Categoria, tipo: str) -> None:
         raise RegraDeNegocio(f"A categoria “{categoria}” não é de {tipo.lower()}.")
 
 
+def validar_mesmo_dono(*registros) -> None:
+    """Conta e categoria (ou origem e destino) têm de ser do mesmo usuário."""
+    if len({r.dono_id for r in registros if r is not None}) > 1:
+        raise RegraDeNegocio("Os registros informados pertencem a usuários diferentes.")
+
+
 def validar_valor(valor_centavos: int) -> None:
     if valor_centavos <= 0:
         raise RegraDeNegocio("O valor deve ser maior que zero.")
@@ -30,6 +36,7 @@ def validar_dados(dados: DadosLancamento, anterior: Lancamento | None = None) ->
     validar_valor(dados.valor_centavos)
     if not dados.descricao.strip():
         raise RegraDeNegocio("Informe a descrição.")
+    validar_mesmo_dono(dados.conta, dados.categoria)
     if anterior is None or anterior.conta_id != dados.conta.pk:
         validar_conta_ativa(dados.conta)
     if anterior is None or anterior.categoria_id != dados.categoria.pk:

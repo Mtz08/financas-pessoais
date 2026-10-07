@@ -20,16 +20,21 @@ from .services.parcelamentos import criar_parcelamento
 from .services.recorrencias import criar_recorrencia, encerrar_recorrencia, gerar_todas
 from .services.transferencias import atualizar_transferencia, criar_transferencia, par_da_transferencia
 
+def _lancamentos(request):
+    """Lançamentos do usuário logado: toda busca por ID parte daqui (ID de outro dono = 404)."""
+    return Lancamento.objects.do_usuario(request.user)
+
+
 TIPOS_SIMPLES = {"receita": Lancamento.Tipo.RECEITA, "despesa": Lancamento.Tipo.DESPESA}
 
 
 def lista(request):
     gerar_todas()  # materializa recorrências do mês (idempotente)
-    filtro_form = FiltroForm(request.GET or None)
+    filtro_form = FiltroForm(request.GET or None, usuario=request.user)
     filtro_form.is_valid()
     campos = getattr(filtro_form, "cleaned_data", {})
     mes = dates.parse_mes(campos.get("mes"), dates.hoje())
-    consulta = filtrar(FiltroRelatorio(mes, dates.ultimo_dia(mes), campos.get("conta"), campos.get("categoria"),
+    consulta = filtrar(FiltroRelatorio(request.user, mes, dates.ultimo_dia(mes), campos.get("conta"), campos.get("categoria"),
                                        campos.get("tipo") or None))
     if campos.get("status"):
         consulta = consulta.filter(status=campos["status"])
@@ -50,7 +55,7 @@ def _parametros_sem(request, *chaves) -> str:
 
 def novo(request, tipo):
     tipo_lancamento = TIPOS_SIMPLES.get(tipo) or _404()
-    form = LancamentoForm(request.POST or None, tipo=tipo_lancamento)
+    form = LancamentoForm(request.POST or None, usuario=request.user, tipo=tipo_lancamento)
     return processar_formulario(
         request, form, lambda f: criar_lancamento(f.para_dados()), sucesso="lancamentos:lista",
         template="lancamentos/form.html", contexto={"titulo": f"Nova {tipo}"}, mensagem="Lançamento criado.",
@@ -58,10 +63,10 @@ def novo(request, tipo):
 
 
 def editar(request, pk):
-    lancamento = get_object_or_404(Lancamento.objects.select_related("parcelamento", "recorrencia"), pk=pk)
+    lancamento = get_object_or_404(_lancamentos(request).select_related("parcelamento", "recorrencia"), pk=pk)
     if lancamento.eh_transferencia:
         return redirect("lancamentos:transferencia_editar", pk=pk)
-    form = LancamentoForm(request.POST or None, tipo=lancamento.tipo, lancamento=lancamento)
+    form = LancamentoForm(request.POST or None, usuario=request.user, tipo=lancamento.tipo, lancamento=lancamento)
     return processar_formulario(
         request, form, lambda f: operacoes.editar(lancamento, f.para_dados(), f.escopo_escolhido()),
         sucesso="lancamentos:lista", template="lancamentos/form.html",
@@ -70,7 +75,7 @@ def editar(request, pk):
 
 
 def excluir(request, pk):
-    lancamento = get_object_or_404(Lancamento.objects.select_related("parcelamento", "recorrencia"), pk=pk)
+    lancamento = get_object_or_404(_lancamentos(request).select_related("parcelamento", "recorrencia"), pk=pk)
     com_escopo = operacoes.aceita_escopo(lancamento)
     form = ExcluirForm(request.POST or None)
     if request.method == "POST" and (not com_escopo or form.is_valid()):
@@ -85,7 +90,7 @@ def excluir(request, pk):
 
 @require_POST
 def alternar_status(request, pk):
-    lancamento = get_object_or_404(Lancamento, pk=pk)
+    lancamento = get_object_or_404(_lancamentos(request), pk=pk)
     alternar_status_servico(lancamento)
     voltar = request.POST.get("voltar", "")
     # Só redireciona para o próprio site (evita open redirect).
@@ -95,7 +100,7 @@ def alternar_status(request, pk):
 
 
 def transferencia_nova(request):
-    form = TransferenciaForm(request.POST or None)
+    form = TransferenciaForm(request.POST or None, usuario=request.user)
     return processar_formulario(
         request, form, lambda f: criar_transferencia(f.para_dados()), sucesso="lancamentos:lista",
         template="lancamentos/form.html", contexto={"titulo": "Nova transferência"},
@@ -104,9 +109,9 @@ def transferencia_nova(request):
 
 
 def transferencia_editar(request, pk):
-    lancamento = get_object_or_404(Lancamento, pk=pk, transferencia_id__isnull=False)
+    lancamento = get_object_or_404(_lancamentos(request), pk=pk, transferencia_id__isnull=False)
     saida, entrada = par_da_transferencia(lancamento)
-    form = TransferenciaForm(request.POST or None, saida=saida, entrada=entrada)
+    form = TransferenciaForm(request.POST or None, usuario=request.user, saida=saida, entrada=entrada)
     return processar_formulario(
         request, form, lambda f: atualizar_transferencia(lancamento, f.para_dados()),
         sucesso="lancamentos:lista", template="lancamentos/form.html",
@@ -115,7 +120,7 @@ def transferencia_editar(request, pk):
 
 
 def parcelado_novo(request):
-    form = ParceladoForm(request.POST or None)
+    form = ParceladoForm(request.POST or None, usuario=request.user)
     return processar_formulario(
         request, form, lambda f: criar_parcelamento(f.para_dados()), sucesso="lancamentos:lista",
         template="lancamentos/form.html", contexto={"titulo": "Nova compra parcelada"},
@@ -124,12 +129,12 @@ def parcelado_novo(request):
 
 
 def recorrencias(request):
-    ativas = Recorrencia.objects.select_related("conta", "categoria", "categoria__pai")
+    ativas = Recorrencia.objects.do_usuario(request.user).select_related("conta", "categoria", "categoria__pai")
     return render(request, "lancamentos/recorrencias.html", {"recorrencias": ativas, "hoje": dates.hoje()})
 
 
 def recorrencia_nova(request):
-    form = RecorrenciaForm(request.POST or None)
+    form = RecorrenciaForm(request.POST or None, usuario=request.user)
     return processar_formulario(
         request, form, lambda f: criar_recorrencia(f.para_dados()), sucesso="lancamentos:recorrencias",
         template="form.html", contexto={"titulo": "Nova recorrência"}, mensagem="Recorrência criada.",
@@ -139,7 +144,7 @@ def recorrencia_nova(request):
 @require_POST
 def recorrencia_encerrar(request, pk):
     """Encerra hoje: mantém o histórico e apaga as ocorrências futuras pendentes."""
-    recorrencia = get_object_or_404(Recorrencia, pk=pk)
+    recorrencia = get_object_or_404(Recorrencia.objects.do_usuario(request.user), pk=pk)
     encerrar_recorrencia(recorrencia, dates.hoje())
     messages.success(request, f"Recorrência “{recorrencia.descricao}” encerrada.")
     return redirect("lancamentos:recorrencias")

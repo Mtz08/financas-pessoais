@@ -10,13 +10,14 @@ from core.money import ValorInvalido, dividir_em_parcelas
 
 from .dados import DadosLancamento, DadosParcelamento, Escopo
 from .lancamentos import atualizar_lancamento, criar_lancamento
-from .validacao import validar_categoria, validar_conta_ativa
+from .validacao import validar_categoria, validar_conta_ativa, validar_mesmo_dono
 
 
 @transaction.atomic
 def criar_parcelamento(dados: DadosParcelamento) -> Parcelamento:
     """Parcela i vence i meses após a compra. No cartão, cada parcela vai
     para a fatura seguinte à anterior (a 1ª respeita o dia de fechamento)."""
+    validar_mesmo_dono(dados.conta, dados.categoria)
     validar_conta_ativa(dados.conta)
     validar_categoria(dados.categoria, Lancamento.Tipo.DESPESA)
     valores = _dividir(dados)

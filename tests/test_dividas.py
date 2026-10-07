@@ -13,9 +13,9 @@ from apps.lancamentos.services.saldos import saldo_conta
 
 
 @pytest.fixture
-def divida(db):
+def divida(usuario):
     def fabricar(**campos) -> Divida:
-        padrao = {"credor": "Credor Fictício", "descricao": "Empréstimo", "valor_centavos": 50_000,
+        padrao = {"dono": usuario, "credor": "Credor Fictício", "descricao": "Empréstimo", "valor_centavos": 50_000,
                   "data": date(2026, 9, 1)}
         return Divida.objects.create(**{**padrao, **campos})
     return fabricar
@@ -76,12 +76,12 @@ def test_baixa_exige_post(cliente_logado, divida):
     assert not d.paga
 
 
-def test_resumo_soma_so_as_abertas_e_conta_vencidas(divida):
+def test_resumo_soma_so_as_abertas_e_conta_vencidas(divida, usuario):
     divida(credor="A", valor_centavos=10_000, vencimento=date(2026, 9, 30))
     divida(credor="A", valor_centavos=5_000)
     divida(credor="B", valor_centavos=20_000, vencimento=date(2026, 12, 1))
     dar_baixa(divida(credor="C", valor_centavos=99_000), date(2026, 10, 2))
-    resumo = resumir(hoje=date(2026, 10, 7))
+    resumo = resumir(usuario, hoje=date(2026, 10, 7))
     assert (resumo.total_aberto, resumo.quantidade_aberta, resumo.vencidas) == (35_000, 3, 1)
     assert [(c["credor"], c["total"]) for c in resumo.por_credor] == [("B", 20_000), ("A", 15_000)]
 
@@ -98,12 +98,12 @@ def test_reabrir_limpa_a_data(divida):
     assert d.data_pagamento is None
 
 
-def test_backup_inclui_dividas(divida):
+def test_backup_inclui_dividas(divida, usuario):
     divida(credor="Credor Backup")
     dar_baixa(divida(credor="Credor Pago"), date(2026, 10, 1))
-    pacote = exportar()
+    pacote = exportar(usuario)
     Divida.objects.all().delete()
-    importar(json.dumps(pacote).encode())
+    importar(usuario, json.dumps(pacote).encode())
     assert sorted(Divida.objects.values_list("credor", "paga")) == [("Credor Backup", False), ("Credor Pago", True)]
 
 

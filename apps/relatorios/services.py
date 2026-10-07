@@ -16,6 +16,7 @@ _INICIO_DE_FORMULA = ("=", "+", "-", "@", "\t", "\r")
 
 @dataclass(frozen=True)
 class FiltroRelatorio:
+    usuario: object  # só os lançamentos das contas deste usuário
     inicio: date
     fim: date
     conta: Conta | None = None
@@ -39,7 +40,7 @@ class Totais:
 
 
 def filtrar(filtro: FiltroRelatorio) -> QuerySet[Lancamento]:
-    consulta = Lancamento.objects.filter(data__gte=filtro.inicio, data__lte=filtro.fim).select_related(
+    consulta = Lancamento.objects.do_usuario(filtro.usuario).filter(data__gte=filtro.inicio, data__lte=filtro.fim).select_related(
         "conta", "categoria", "categoria__pai", "parcelamento"
     )
     if filtro.conta:

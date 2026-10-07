@@ -2,6 +2,7 @@
 
 | Situação | Regra |
 |---|---|
+| Usuários | Cada usuário tem os próprios dados: contas, categorias, lançamentos, cartões, orçamentos e dívidas. Ninguém vê nem altera o que é de outro (ID de outro dono = "não encontrado"). Nomes de conta/categoria são únicos por usuário. |
 | Valores | Sempre em centavos inteiros. Entrada no formato `1.234,56`; `10.5` é recusado por ambiguidade. |
 | Saldo (corrente/dinheiro) | Saldo inicial + receitas pagas − despesas pagas a partir da data do saldo inicial. Pendente é só previsão. |
 | Saldo (cartão) | Toda compra conta como dívida (saldo negativo), paga ou não. Pagamento de fatura reduz a dívida. |
@@ -17,4 +18,4 @@
 | Receitas x despesas | Transferências e pagamentos de fatura não contam. Compra no cartão conta na data da compra. |
 | Excluir conta/categoria | Bloqueado se houver lançamentos (o banco recusa). Use **Arquivar**: some dos formulários e mantém o histórico. |
 | Duplo clique / F5 | Cada formulário tem uma chave única; o segundo envio é ignorado. O botão também é desabilitado no navegador. |
-| Backup | JSON com todas as tabelas de finanças. Importar substitui tudo numa única transação: se algo falhar, nada muda. |
+| Backup | JSON só com os dados de quem exporta. Importar substitui só os dados de quem importa, numa única transação (se algo falhar, nada muda); os registros ganham IDs novos. Arquivos da versão antiga continuam aceitos. |

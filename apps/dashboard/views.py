@@ -15,20 +15,20 @@ def index(request):
     gerar_todas()  # materializa as recorrências do mês (idempotente)
     hoje = dates.hoje()
     mes = dates.parse_mes(request.GET.get("mes"), hoje)
-    saldos = saldos_das_contas()
-    gastos = gastos_por_categoria(mes)
-    evolucao = evolucao_mensal(mes)
+    saldos = saldos_das_contas(request.user)
+    gastos = gastos_por_categoria(request.user, mes)
+    evolucao = evolucao_mensal(request.user, mes)
     return render(request, "dashboard/index.html", {
         "mes": mes,
         "mes_anterior": dates.somar_meses(mes, -1),
         "mes_seguinte": dates.somar_meses(mes, 1),
         "saldo_disponivel": sum(s for c, s in saldos if not c.eh_cartao),
         "saldos": saldos,
-        "resumo": resumo_do_mes(mes),
+        "resumo": resumo_do_mes(request.user, mes),
         "gastos": gastos,
         "evolucao": evolucao,
-        "a_vencer": contas_a_vencer(hoje=hoje),
-        "alertas": alertas_do_mes(mes),
+        "a_vencer": contas_a_vencer(request.user, hoje=hoje),
+        "alertas": alertas_do_mes(request.user, mes),
         "hoje": hoje,
         # Dados dos gráficos: vão para o template via json_script (sem script inline).
         "grafico_categorias": {

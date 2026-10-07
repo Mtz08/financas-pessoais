@@ -1,6 +1,6 @@
 """Popula o banco com dados FICTÍCIOS para testar o sistema.
 
-Uso: python manage.py seed [--apagar]
+Uso: python manage.py seed [--usuario NOME] [--apagar]
 """
 
 from datetime import date
@@ -9,7 +9,9 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.backup.services import apagar_tudo
+from django.contrib.auth import get_user_model
+
+from apps.backup.services import apagar_dados_do_usuario
 from apps.cartoes.models import Fatura
 from apps.cartoes.pagamentos import pagar_fatura
 from apps.cartoes.services import resumir_fatura
@@ -45,16 +47,18 @@ class Command(BaseCommand):
     help = "Popula o banco com dados fictícios."
 
     def add_arguments(self, parser):
-        parser.add_argument("--apagar", action="store_true", help="Apaga os dados atuais antes.")
+        parser.add_argument("--apagar", action="store_true", help="Apaga antes os dados desse usuário.")
+        parser.add_argument("--usuario", help="Usuário que recebe os dados (padrão: o primeiro cadastrado).")
 
     @transaction.atomic
-    def handle(self, *args, apagar=False, **options):
+    def handle(self, *args, apagar=False, usuario=None, **options):
         if not settings.DEBUG:
             raise CommandError("O seed só roda com DEBUG=True (nunca em produção).")
-        if Conta.objects.exists():
+        self.dono = self._usuario(usuario)
+        if Conta.objects.do_usuario(self.dono).exists():
             if not apagar:
-                raise CommandError("Já existem dados. Use --apagar para substituir.")
-            apagar_tudo()
+                raise CommandError(f"{self.dono} já tem dados. Use --apagar para substituir.")
+            apagar_dados_do_usuario(self.dono)
         self.hoje = dates.hoje()
         self.inicio = dates.somar_meses(dates.primeiro_dia(self.hoje), -5)
         self._criar_categorias()
@@ -64,26 +68,34 @@ class Command(BaseCommand):
         self._criar_parcelamentos()
         self._criar_orcamentos()
         self._pagar_faturas_vencidas()
-        self.stdout.write(self.style.SUCCESS(f"Seed criado: {Lancamento.objects.count()} lançamentos fictícios."))
+        total = Lancamento.objects.do_usuario(self.dono).count()
+        self.stdout.write(self.style.SUCCESS(f"Seed criado para {self.dono}: {total} lançamentos fictícios."))
+
+    def _usuario(self, nome):
+        usuarios = get_user_model().objects.order_by("id")
+        dono = usuarios.filter(username=nome).first() if nome else usuarios.first()
+        if dono is None:
+            raise CommandError("Usuário não encontrado. Crie um com createsuperuser antes do seed.")
+        return dono
 
     def _criar_categorias(self):
         self.cat = {}
         for tipo, arvore in CATEGORIAS.items():
             for nome_pai, filhas in arvore.items():
-                pai = Categoria.objects.create(nome=nome_pai, tipo=tipo)
+                pai = Categoria.objects.create(dono=self.dono, nome=nome_pai, tipo=tipo)
                 self.cat[nome_pai] = pai
                 for nome in filhas:
-                    self.cat[nome] = Categoria.objects.create(nome=nome, tipo=tipo, pai=pai)
+                    self.cat[nome] = Categoria.objects.create(dono=self.dono, nome=nome, tipo=tipo, pai=pai)
 
     def _criar_contas(self):
         self.banco = Conta.objects.create(
-            nome="Banco Exemplo", tipo="CORRENTE", saldo_inicial_centavos=350000, data_saldo_inicial=self.inicio
+            dono=self.dono, nome="Banco Exemplo", tipo="CORRENTE", saldo_inicial_centavos=350000, data_saldo_inicial=self.inicio
         )
         self.carteira = Conta.objects.create(
-            nome="Carteira", tipo="CARTEIRA", saldo_inicial_centavos=15000, data_saldo_inicial=self.inicio
+            dono=self.dono, nome="Carteira", tipo="CARTEIRA", saldo_inicial_centavos=15000, data_saldo_inicial=self.inicio
         )
         self.cartao = Conta.objects.create(
-            nome="Cartão Exemplo", tipo="CARTAO", data_saldo_inicial=self.inicio,
+            dono=self.dono, nome="Cartão Exemplo", tipo="CARTAO", data_saldo_inicial=self.inicio,
             dia_fechamento=25, dia_vencimento=5, limite_centavos=800000,
         )
 
@@ -98,7 +110,7 @@ class Command(BaseCommand):
         for tipo, conta, categoria, descricao, valor, dia in fixos:
             criar_recorrencia(DadosRecorrencia(tipo, conta, self.cat[categoria], descricao, valor, dia, self.inicio))
         # Ocorrências passadas ficam pagas.
-        Lancamento.objects.filter(recorrencia__isnull=False, data__lt=self.hoje).update(status="PAGO")
+        Lancamento.objects.do_usuario(self.dono).filter(recorrencia__isnull=False, data__lt=self.hoje).update(status="PAGO")
 
     def _criar_lancamentos_avulsos(self):
         exemplos = [
@@ -136,7 +148,7 @@ class Command(BaseCommand):
             Orcamento.objects.create(categoria=self.cat[categoria], vigente_desde=self.inicio, limite_centavos=limite)
 
     def _pagar_faturas_vencidas(self):
-        for fatura in Fatura.objects.filter(data_vencimento__lt=self.hoje):
+        for fatura in Fatura.objects.do_usuario(self.dono).filter(data_vencimento__lt=self.hoje):
             restante = resumir_fatura(fatura).restante_centavos
             if restante:
                 pagar_fatura(fatura, self.banco, restante, fatura.data_vencimento)

@@ -17,24 +17,24 @@ class PagamentoForm(FormIdempotente):
     valor = CampoReais(label="Valor (R$)")
     data = CampoData(label="Data do pagamento")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["conta_origem"].queryset = contas_ativas(sem_cartao=True)
+        self.fields["conta_origem"].queryset = contas_ativas(usuario, sem_cartao=True)
         self.fields["data"].initial = dates.hoje()
 
 
 def faturas(request, conta_pk):
-    cartao = get_object_or_404(Conta, pk=conta_pk, tipo=Conta.Tipo.CARTAO)
+    cartao = get_object_or_404(Conta.objects.do_usuario(request.user), pk=conta_pk, tipo=Conta.Tipo.CARTAO)
     fatura_da_compra(cartao, dates.hoje())  # garante que a fatura corrente exista
     resumos = [resumir_fatura(f) for f in cartao.faturas.order_by("-competencia")]
     return render(request, "cartoes/faturas.html", {"cartao": cartao, "resumos": resumos,
-                                                    "cartoes": Conta.objects.filter(tipo=Conta.Tipo.CARTAO)})
+                                                    "cartoes": Conta.objects.do_usuario(request.user).filter(tipo=Conta.Tipo.CARTAO)})
 
 
 def fatura(request, pk):
-    fatura = get_object_or_404(Fatura.objects.select_related("conta"), pk=pk)
+    fatura = get_object_or_404(Fatura.objects.do_usuario(request.user).select_related("conta"), pk=pk)
     resumo = resumir_fatura(fatura)
-    form = PagamentoForm(request.POST or None, initial={"valor": resumo.restante_centavos or None})
+    form = PagamentoForm(request.POST or None, usuario=request.user, initial={"valor": resumo.restante_centavos or None})
     if request.method == "POST":
         return processar_formulario(
             request, form,
@@ -52,7 +52,7 @@ def _contexto_fatura(fatura: Fatura, resumo) -> dict:
 
 
 def cartoes(request):
-    primeiro = Conta.objects.filter(tipo=Conta.Tipo.CARTAO, ativo=True).first()
+    primeiro = Conta.objects.do_usuario(request.user).filter(tipo=Conta.Tipo.CARTAO, ativo=True).first()
     if primeiro:
         return redirect("cartoes:faturas", conta_pk=primeiro.pk)
     return render(request, "cartoes/faturas.html", {"cartao": None, "resumos": [], "cartoes": []})

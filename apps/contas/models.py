@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
-from core.models import ModeloArquivavel
+from core.models import ModeloArquivavel, gerenciador_do_dono
 
 DIA_DO_MES = [MinValueValidator(1), MaxValueValidator(31)]
 
@@ -20,7 +21,8 @@ class Conta(ModeloArquivavel):
         CARTEIRA = "CARTEIRA", "Dinheiro em espécie"
         CARTAO = "CARTAO", "Cartão de crédito"
 
-    nome = models.CharField(max_length=80, unique=True)
+    dono = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contas")
+    nome = models.CharField(max_length=80)
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     saldo_inicial_centavos = models.BigIntegerField(default=0)
     data_saldo_inicial = models.DateField()
@@ -29,9 +31,12 @@ class Conta(ModeloArquivavel):
     dia_vencimento = models.PositiveSmallIntegerField(null=True, blank=True, validators=DIA_DO_MES)
     limite_centavos = models.BigIntegerField(null=True, blank=True)
 
+    objects = gerenciador_do_dono("dono")
+
     class Meta:
         ordering = ["nome"]
         constraints = [
+            models.UniqueConstraint(fields=["dono", "nome"], name="conta_nome_unico_por_dono"),
             models.CheckConstraint(
                 name="conta_cartao_exige_dias",
                 condition=(

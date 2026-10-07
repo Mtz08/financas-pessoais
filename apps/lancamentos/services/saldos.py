@@ -34,10 +34,11 @@ def _filtro_efetivado(conta: Conta) -> Q:
     return pago
 
 
-def saldos_das_contas(ate: date | None = None) -> list[tuple[Conta, int]]:
-    return [(conta, saldo_conta(conta, ate)) for conta in Conta.objects.filter(ativo=True)]
+def saldos_das_contas(usuario, ate: date | None = None) -> list[tuple[Conta, int]]:
+    contas = Conta.objects.do_usuario(usuario).filter(ativo=True)
+    return [(conta, saldo_conta(conta, ate)) for conta in contas]
 
 
-def saldo_disponivel(ate: date | None = None) -> int:
+def saldo_disponivel(usuario, ate: date | None = None) -> int:
     """Soma de conta corrente + dinheiro (cartão fica de fora: é dívida)."""
-    return sum(saldo for conta, saldo in saldos_das_contas(ate) if not conta.eh_cartao)
+    return sum(saldo for conta, saldo in saldos_das_contas(usuario, ate) if not conta.eh_cartao)

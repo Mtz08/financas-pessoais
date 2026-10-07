@@ -19,7 +19,7 @@ from core.exceptions import RegraDeNegocio
 
 from .dados import DadosLancamento, Escopo
 from .lancamentos import atualizar_lancamento, criar_lancamento
-from .validacao import validar_categoria, validar_conta_ativa, validar_valor
+from .validacao import validar_categoria, validar_conta_ativa, validar_mesmo_dono, validar_valor
 
 HORIZONTE_MESES = 2  # gera o mês atual + 2 à frente (para "contas a vencer")
 
@@ -49,6 +49,7 @@ def criar_recorrencia(dados: DadosRecorrencia) -> Recorrencia:
 
 
 def _validar(dados: DadosRecorrencia) -> None:
+    validar_mesmo_dono(dados.conta, dados.categoria)
     validar_conta_ativa(dados.conta)
     validar_categoria(dados.categoria, dados.tipo)
     validar_valor(dados.valor_centavos)

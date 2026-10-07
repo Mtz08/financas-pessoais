@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
-from core.models import ModeloComDatas
+from core.models import ModeloComDatas, gerenciador_do_dono
 
 
 class Divida(ModeloComDatas):
@@ -11,6 +12,7 @@ class Divida(ModeloComDatas):
     A baixa é manual, quando você mesmo registra que pagou.
     """
 
+    dono = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="dividas")
     credor = models.CharField("Para quem devo", max_length=100)
     descricao = models.CharField("Descrição", max_length=120, blank=True)
     valor_centavos = models.BigIntegerField()
@@ -19,6 +21,8 @@ class Divida(ModeloComDatas):
     observacao = models.TextField("Observação", blank=True)
     paga = models.BooleanField(default=False)
     data_pagamento = models.DateField(null=True, blank=True)
+
+    objects = gerenciador_do_dono("dono")
 
     class Meta:
         ordering = ["paga", models.F("vencimento").asc(nulls_last=True), "data", "id"]

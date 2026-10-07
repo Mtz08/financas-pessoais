@@ -36,11 +36,11 @@ class SituacaoOrcamento:
         return self.limite_centavos - self.gasto_centavos
 
 
-def limites_vigentes(mes: date) -> dict[int, Orcamento]:
+def limites_vigentes(usuario, mes: date) -> dict[int, Orcamento]:
     """Para cada categoria, o orçamento com maior `vigente_desde` <= mês."""
     vigentes: dict[int, Orcamento] = {}
     consulta = (
-        Orcamento.objects.filter(vigente_desde__lte=dates.primeiro_dia(mes), categoria__ativo=True)
+        Orcamento.objects.do_usuario(usuario).filter(vigente_desde__lte=dates.primeiro_dia(mes), categoria__ativo=True)
         .select_related("categoria", "categoria__pai")
         .order_by("categoria_id", "-vigente_desde")
     )
@@ -60,13 +60,13 @@ def gasto_no_mes(categoria: Categoria, mes: date) -> int:
     return total or 0
 
 
-def situacao_do_mes(mes: date) -> list[SituacaoOrcamento]:
+def situacao_do_mes(usuario, mes: date) -> list[SituacaoOrcamento]:
     situacoes = [
         SituacaoOrcamento(o.categoria, o.limite_centavos, gasto_no_mes(o.categoria, mes))
-        for o in limites_vigentes(mes).values()
+        for o in limites_vigentes(usuario, mes).values()
     ]
     return sorted(situacoes, key=lambda s: s.percentual, reverse=True)
 
 
-def alertas_do_mes(mes: date) -> list[SituacaoOrcamento]:
-    return [s for s in situacao_do_mes(mes) if s.nivel != "ok"]
+def alertas_do_mes(usuario, mes: date) -> list[SituacaoOrcamento]:
+    return [s for s in situacao_do_mes(usuario, mes) if s.nivel != "ok"]

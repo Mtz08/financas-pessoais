@@ -2,7 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
-from core.models import ModeloComDatas
+from core.models import ModeloComDatas, gerenciador_do_dono
 
 
 class Recorrencia(ModeloComDatas):
@@ -28,6 +28,8 @@ class Recorrencia(ModeloComDatas):
     # excluída ("só esta") nunca é recriada.
     gerada_ate = models.DateField(null=True, blank=True, editable=False)
 
+    objects = gerenciador_do_dono("conta__dono")
+
     class Meta:
         ordering = ["descricao"]
         constraints = [
@@ -52,6 +54,8 @@ class Parcelamento(ModeloComDatas):
     valor_total_centavos = models.BigIntegerField()
     quantidade_parcelas = models.PositiveSmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(72)])
     data_compra = models.DateField()
+
+    objects = gerenciador_do_dono("conta__dono")
 
     class Meta:
         constraints = [
@@ -119,6 +123,8 @@ class Lancamento(ModeloComDatas):
 
     # Reservado para importação de extrato (fora do MVP).
     hash_importacao = models.CharField(max_length=64, null=True, blank=True)
+
+    objects = gerenciador_do_dono("conta__dono")
 
     class Meta:
         ordering = ["-data", "-id"]

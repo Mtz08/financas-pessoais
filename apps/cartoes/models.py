@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import F, Q
 
-from core.models import ModeloComDatas
+from core.models import ModeloComDatas, gerenciador_do_dono
 
 
 class Fatura(ModeloComDatas):
@@ -17,6 +17,8 @@ class Fatura(ModeloComDatas):
     competencia = models.DateField()
     data_fechamento = models.DateField()
     data_vencimento = models.DateField()
+
+    objects = gerenciador_do_dono("conta__dono")
 
     class Meta:
         ordering = ["conta", "competencia"]

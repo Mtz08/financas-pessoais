@@ -10,12 +10,13 @@ from apps.lancamentos.models import Lancamento
 from core.exceptions import RegraDeNegocio
 
 from .dados import DadosTransferencia
-from .validacao import validar_conta_ativa, validar_valor
+from .validacao import validar_conta_ativa, validar_mesmo_dono, validar_valor
 
 
 def _validar(dados: DadosTransferencia) -> None:
     if dados.origem.pk == dados.destino.pk:
         raise RegraDeNegocio("Origem e destino devem ser contas diferentes.")
+    validar_mesmo_dono(dados.origem, dados.destino)
     validar_conta_ativa(dados.origem)
     validar_conta_ativa(dados.destino)
     validar_valor(dados.valor_centavos)

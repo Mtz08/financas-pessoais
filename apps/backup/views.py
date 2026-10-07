@@ -32,7 +32,7 @@ def index(request):
 
 def baixar(request):
     agora = timezone.localtime()
-    resposta = HttpResponse(json.dumps(exportar(), ensure_ascii=False, indent=1),
+    resposta = HttpResponse(json.dumps(exportar(request.user), ensure_ascii=False, indent=1),
                             content_type="application/json; charset=utf-8")
     resposta["Content-Disposition"] = f'attachment; filename="financas_backup_{agora:%Y%m%d_%H%M}.json"'
     return resposta
@@ -44,7 +44,7 @@ def restaurar(request):
     if not form.is_valid():
         return render(request, "backup/index.html", {"form": form})
     try:
-        contagem = importar(form.cleaned_data["arquivo"].read())
+        contagem = importar(request.user, form.cleaned_data["arquivo"].read())
     except RegraDeNegocio as erro:
         form.add_error("arquivo", str(erro))
         return render(request, "backup/index.html", {"form": form})

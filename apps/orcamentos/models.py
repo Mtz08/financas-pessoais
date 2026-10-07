@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Q
 
-from core.models import ModeloComDatas
+from core.models import ModeloComDatas, gerenciador_do_dono
 
 
 class Orcamento(ModeloComDatas):
@@ -15,6 +15,8 @@ class Orcamento(ModeloComDatas):
     categoria = models.ForeignKey("categorias.Categoria", on_delete=models.PROTECT, related_name="orcamentos")
     vigente_desde = models.DateField(help_text="Dia 1º do primeiro mês de vigência.")
     limite_centavos = models.BigIntegerField()
+
+    objects = gerenciador_do_dono("categoria__dono")
 
     class Meta:
         ordering = ["categoria", "-vigente_desde"]

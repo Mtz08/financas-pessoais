@@ -47,6 +47,11 @@ que a senha é fraca e perguntar se quer ignorar, responda **N** e escolha outra
 
 O `Remove-Item` no final volta o PowerShell para o banco local.
 
+## 3.1. Mais usuários
+
+Cada usuário tem os próprios dados, separados. Para cadastrar outra pessoa, repita o passo 3
+com outro nome (`createsuperuser --username NOME`). Ela começa com tudo vazio.
+
 ## 4. Usar pelo celular
 
 Abra `https://financas-xxxx.onrender.com` (o endereço aparece no painel do Render).

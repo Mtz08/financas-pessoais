@@ -21,19 +21,19 @@ class OrcamentoForm(ModelFormIdempotente):
         model = Orcamento
         fields = ["categoria", "vigente_desde", "limite_centavos"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["categoria"].queryset = categorias_do_tipo("DESPESA")
+        self.fields["categoria"].queryset = categorias_do_tipo(usuario, "DESPESA")
         self.fields["vigente_desde"].initial = dates.primeiro_dia(dates.hoje())
 
 
 def lista(request):
     mes = dates.parse_mes(request.GET.get("mes"), dates.hoje())
-    form = OrcamentoForm(request.POST or None)
+    form = OrcamentoForm(request.POST or None, usuario=request.user)
     contexto = {
         "mes": mes,
-        "situacoes": situacao_do_mes(mes),
-        "orcamentos": Orcamento.objects.select_related("categoria", "categoria__pai"),
+        "situacoes": situacao_do_mes(request.user, mes),
+        "orcamentos": Orcamento.objects.do_usuario(request.user).select_related("categoria", "categoria__pai"),
         "mes_anterior": dates.somar_meses(mes, -1),
         "mes_seguinte": dates.somar_meses(mes, 1),
     }
@@ -43,7 +43,7 @@ def lista(request):
 
 @require_POST
 def excluir(request, pk):
-    orcamento = get_object_or_404(Orcamento, pk=pk)
+    orcamento = get_object_or_404(Orcamento.objects.do_usuario(request.user), pk=pk)
     orcamento.delete()
     messages.success(request, "Orçamento removido.")
     return redirect("orcamentos:lista")

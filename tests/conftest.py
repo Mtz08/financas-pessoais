@@ -14,39 +14,39 @@ SENHA_TESTE = "SenhaFicticia#2026"
 
 
 @pytest.fixture
-def corrente(db):
+def corrente(usuario):
     return Conta.objects.create(
-        nome="Banco Teste", tipo=Conta.Tipo.CORRENTE, saldo_inicial_centavos=100_000,
+        dono=usuario, nome="Banco Teste", tipo=Conta.Tipo.CORRENTE, saldo_inicial_centavos=100_000,
         data_saldo_inicial=date(2026, 1, 1),
     )
 
 
 @pytest.fixture
-def carteira(db):
+def carteira(usuario):
     return Conta.objects.create(
-        nome="Carteira Teste", tipo=Conta.Tipo.CARTEIRA, saldo_inicial_centavos=5_000,
+        dono=usuario, nome="Carteira Teste", tipo=Conta.Tipo.CARTEIRA, saldo_inicial_centavos=5_000,
         data_saldo_inicial=date(2026, 1, 1),
     )
 
 
 @pytest.fixture
-def cartao(db):
+def cartao(usuario):
     """Fecha dia 25, vence dia 5 do mês seguinte."""
     return Conta.objects.create(
-        nome="Cartão Teste", tipo=Conta.Tipo.CARTAO, data_saldo_inicial=date(2026, 1, 1),
+        dono=usuario, nome="Cartão Teste", tipo=Conta.Tipo.CARTAO, data_saldo_inicial=date(2026, 1, 1),
         dia_fechamento=25, dia_vencimento=5,
     )
 
 
 @pytest.fixture
-def mercado(db):
-    pai = Categoria.objects.create(nome="Alimentação", tipo=Categoria.Tipo.DESPESA)
-    return Categoria.objects.create(nome="Mercado", tipo=Categoria.Tipo.DESPESA, pai=pai)
+def mercado(usuario):
+    pai = Categoria.objects.create(dono=usuario, nome="Alimentação", tipo=Categoria.Tipo.DESPESA)
+    return Categoria.objects.create(dono=usuario, nome="Mercado", tipo=Categoria.Tipo.DESPESA, pai=pai)
 
 
 @pytest.fixture
-def salario(db):
-    return Categoria.objects.create(nome="Salário", tipo=Categoria.Tipo.RECEITA)
+def salario(usuario):
+    return Categoria.objects.create(dono=usuario, nome="Salário", tipo=Categoria.Tipo.RECEITA)
 
 
 @pytest.fixture

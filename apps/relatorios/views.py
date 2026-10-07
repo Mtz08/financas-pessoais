@@ -19,14 +19,22 @@ LIMITE_EM_TELA = 1000
 class RelatorioForm(forms.Form):
     inicio = CampoData(label="De")
     fim = CampoData(label="Até")
-    conta = forms.ModelChoiceField(queryset=Conta.objects.all(), required=False, empty_label="Todas")
+    conta = forms.ModelChoiceField(queryset=Conta.objects.none(), required=False, empty_label="Todas")
     categoria = forms.ModelChoiceField(
-        queryset=Categoria.objects.select_related("pai").order_by("tipo", "pai__nome", "nome"),
+        queryset=Categoria.objects.none(),
         required=False, empty_label="Todas",
     )
     tipo = forms.ChoiceField(
         choices=[("", "Receitas e despesas"), ("RECEITA", "Receitas"), ("DESPESA", "Despesas")], required=False
     )
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+        self.fields["conta"].queryset = Conta.objects.do_usuario(usuario)
+        self.fields["categoria"].queryset = (
+            Categoria.objects.do_usuario(usuario).select_related("pai").order_by("tipo", "pai__nome", "nome")
+        )
 
     def clean(self):
         dados = super().clean()
@@ -36,13 +44,13 @@ class RelatorioForm(forms.Form):
 
     def filtro(self) -> FiltroRelatorio:
         d = self.cleaned_data
-        return FiltroRelatorio(d["inicio"], d["fim"], d.get("conta"), d.get("categoria"), d.get("tipo") or None)
+        return FiltroRelatorio(self.usuario, d["inicio"], d["fim"], d.get("conta"), d.get("categoria"), d.get("tipo") or None)
 
 
 def index(request):
     hoje = dates.hoje()
     iniciais = {"inicio": dates.primeiro_dia(hoje), "fim": dates.ultimo_dia(hoje)}
-    form = RelatorioForm(request.GET or iniciais)
+    form = RelatorioForm(request.GET or iniciais, usuario=request.user)
     if not form.is_valid():
         return render(request, "relatorios/index.html", {"form": form})
     consulta = filtrar(form.filtro())

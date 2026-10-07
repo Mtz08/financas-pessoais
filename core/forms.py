@@ -57,3 +57,21 @@ class ModelFormIdempotente(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["chave"].initial = uuid.uuid4()
+
+
+class ComDono:
+    """Para ModelForms de modelos com campo `dono` (Conta, Categoria, Dívida).
+
+    Recebe `usuario`; registro novo nasce desse usuário. O `dono` não aparece
+    no formulário, então regras de unicidade que o envolvem precisam ser
+    checadas à mão (o Django ignora constraints com campos fora do form).
+    """
+
+    def __init__(self, *args, usuario, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+        if self.instance.pk is None:
+            self.instance.dono = usuario
+
+    def _outros_do_usuario(self, modelo):
+        return modelo.objects.do_usuario(self.usuario).exclude(pk=self.instance.pk)
